@@ -10,27 +10,35 @@
 #include <iostream>
 
 namespace arcade {
-    typedef struct Texture_s {
+    struct Texture {
         std::string filepath = "";
         u_int8_t r;
         u_int8_t g;
         u_int8_t b;
         u_int8_t a;
-    } Texture_t;
+    };
 
-    typedef struct rectInfo_s {
-        std::size_t x;
-        std::size_t y;
-        std::size_t w;
-        std::size_t h;
-    } rectInfo_t;
+    struct Size {
+        size_t w;
+        size_t h;
+    };
+
+    struct Position {
+        size_t x;
+        size_t y;
+    };
+
+    struct Bounds : Size, Position {
+    };
 
     class IRect {
         public:
             IRect() = default;
             virtual ~IRect() = default;
-            virtual rectInfo_t getRectInfo() const = 0;
+            virtual Bounds getBounds() const = 0;
             virtual bool isMouseOver() const = 0;
-            virtual void setPosition(std::size_t x, std::size_t y) = 0;
+            virtual void setSize(Size size) = 0;
+            virtual void display() const  = 0;
+            virtual void setPosition(Position position) = 0;
     };
-}
+};

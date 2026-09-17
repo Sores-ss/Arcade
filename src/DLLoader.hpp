@@ -8,6 +8,7 @@
 #pragma once
 #include <iostream>
 #include <dlfcn.h>
+#include <stdexcept>
 #include "IDisplayModule.hpp"
 
 template<typename T>
@@ -19,8 +20,7 @@ class DLLoader {
             void *handle;
             handle = dlopen(filepath.c_str(), RTLD_LAZY);
             if (!handle) {
-                std::fprintf(stderr, "%s\n", dlerror());
-                std::exit(EXIT_FAILURE);
+                throw std::runtime_error(std::string("Failed to load library: ") + dlerror());
             }
             return handle;
         }
@@ -31,8 +31,7 @@ class DLLoader {
             *(void**) (&myEntryPoint) = dlsym(handle, "myEntryPoint");
             error = dlerror();
             if (error != NULL) {
-                std::fprintf(stderr, "%s\n", error);
-                std::exit(EXIT_FAILURE);
+                throw std::runtime_error(std::string("Failed to find myEntryPoint symbol: ") + error);
             }
             T *obj = myEntryPoint();
             return obj;
@@ -46,8 +45,7 @@ class DLLoader {
             *(void**)(&getTypeLib) = dlsym(handle, "getLibType");
             error = dlerror();
             if (error != NULL) {
-                std::fprintf(stderr, "%s\n", error);
-                std::exit(EXIT_FAILURE);
+                throw std::runtime_error(std::string("Failed to find getLibType symbol: ") + error);
             }
             arcade::EType type = getTypeLib();
             return type;
@@ -61,8 +59,7 @@ class DLLoader {
             *(void**)(&getNameLib) = dlsym(handle, "getLibName");
             error = dlerror();
             if (error != NULL) {
-                std::fprintf(stderr, "%s\n", error);
-                std::exit(EXIT_FAILURE);
+                throw std::runtime_error(std::string("Failed to find getLibName symbol: ") + error);
             }
             std::string name = getNameLib();
             return name;

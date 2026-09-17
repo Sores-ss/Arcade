@@ -32,6 +32,7 @@ namespace arcade {
             void loadGraphic(const std::string &path);
             void loadGame(const std::string &path);
             std::vector<std::string> initLibList(std::string lib);
-            void runGame(const std::string path);
+            void runGames(IRect &selector, bool &running);
+            void runlib(IRect &selector, bool &running);
     };
 }
