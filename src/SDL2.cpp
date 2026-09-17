@@ -86,6 +86,10 @@ namespace arcade {
     void SDL2::SDLRect::setBorder(Texture texture)
     {
         setBorderRect(_rect);
+        if (_borderTexture) {
+            SDL_DestroyTexture(_borderTexture);
+            _borderTexture = nullptr;
+        }
         if (texture.filepath != "") {
             SDL_Surface *surface = IMG_Load(texture.filepath.c_str());
             if (!surface) {
@@ -310,8 +314,10 @@ namespace arcade {
 
     void SDL2::SDLRect::setTexture(Texture texture)
     {
-        if (_texture)
+        if (_texture) {
             SDL_DestroyTexture(_texture);
+            _texture = nullptr;
+        }
         if (texture.filepath != "") {
             SDL_Surface *surface = IMG_Load(texture.filepath.c_str());
             if (!surface) {
