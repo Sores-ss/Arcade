@@ -108,5 +108,8 @@ namespace arcade {
             int _cageExitX = 13;
             bool _initGhostPosition = false;
             bool _running = false;
+            int _superSonic = 0;
+            int _ghostSpeed = 200;
+            std::chrono::steady_clock::time_point _superSonicStart;
     };
 }

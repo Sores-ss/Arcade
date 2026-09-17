@@ -145,8 +145,14 @@ namespace arcade {
         if (elapsed.count() < 120)
             return;
         _lastMove = now;
-        if (nextX < 0 || nextY < 0 || nextX >= MAP_WIDTH || nextY >= MAP_HEIGHT)
-            return;
+        if (nextX < 1)
+            nextX = MAP_WIDTH - 2;
+        if (nextX >= MAP_WIDTH - 1)
+            nextX = 1;
+        if (nextY < 1)
+            nextY = MAP_HEIGHT - 2;
+        if (nextY >= MAP_HEIGHT - 1)
+            nextY = 1;
         if (map[nextY][nextX] != '#') {
             _pacmanStartX = nextX;
             _pacmanStartY = nextY;
@@ -164,6 +170,26 @@ namespace arcade {
             _gumMap[_pacmanStartY][_pacmanStartX] = nullptr;
             map[_pacmanStartY][_pacmanStartX] = ' ';
             _score += 10;
+            bool hasRemainingGums = false;
+            for (const auto &row : map) {
+                for (char tile : row) {
+                    if (tile == '.' || tile == '0') {
+                        hasRemainingGums = true;
+                        break;
+                    }
+                }
+                if (hasRemainingGums)
+                    break;
+            }
+            if (!hasRemainingGums) {
+                _state = "VICTORY";
+                _paused = true;
+            }
+        }
+        if (map[_pacmanStartY][_pacmanStartX] == '0') {
+            _superSonic = 1;
+            _ghostSpeed = 250;
+            _superSonicStart = std::chrono::steady_clock::now();
         }
     }
 
@@ -267,7 +293,7 @@ namespace arcade {
         auto elapsedMove = std::chrono::duration_cast<std::chrono::milliseconds>(now - _ghostLastMove);
         std::array<std::pair<int,int>, 4> movePositions = {{{14, 12}, {10, 15}, {18, 14}, {14, 18}}};
 
-        if (elapsedMove.count() < 200)
+        if (elapsedMove.count() < _ghostSpeed)
             return;
         _ghostLastMove = now;
         if (!_initGhostPosition) {
@@ -322,6 +348,21 @@ namespace arcade {
                 _rectBounds.x + ghost.x * TILE_SIZE,
                 _rectBounds.y + ghost.y * TILE_SIZE
             });
+            if (_superSonic) {
+                ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 255, 255, 255, 0});
+                auto now = std::chrono::steady_clock::now();
+                if (std::chrono::duration_cast<std::chrono::seconds>(now - _superSonicStart).count() >= 10) {
+                    std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
+                    for (int i = 0; i < 4; i++)
+                        _ghosts[i].rect->setTexture({textures[i], 255, 255, 255, 0});
+                    _superSonic = 0;
+                }
+                if (ghost.x == (int)_pacmanStartX && ghost.y == (int)_pacmanStartY) {
+                    _score += 200 * _superSonic;
+                    _superSonic++;
+                    continue;
+                }
+            }
             if (ghost.x == (int)_pacmanStartX && ghost.y == (int)_pacmanStartY) {
                 _state = "GAME OVER";
                 _paused = true;
