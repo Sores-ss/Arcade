@@ -31,8 +31,8 @@ namespace arcade {
         _handleGame = _loaderGame.open(path);
         EType type = _loaderGame.getType(_handleGame);
         if (type == EType::GAME) {
-            _displayGame = _loaderGame.getInstance(_handleGame);
-            _displayGame->run(_displayGraphic);
+            _game = _loaderGame.getInstance(_handleGame);
+            _game->run(_display);
         }
     }
 
@@ -45,9 +45,9 @@ namespace arcade {
     {
         _libs = initLibList(lib);
         loadGraphic(lib);
-        IRect *playButton = _displayGraphic->createRect(200, 100, 300, 250);
-        _displayGraphic->setTexture(playButton, {"./assets/button_texture.png", 180, 180, 180, 255});
-        _displayGraphic->setText(playButton, "PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        IRect *playButton = _display->createRect(200, 100, 300, 250);
+        _display->setTexture(playButton, {"./assets/button_texture.png", 180, 180, 180, 255});
+        _display->setText(playButton, "PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         playButton->setPosition(1920 / 2 - 100, 1080 / 2 - 200 );
         IRect *changeLibButton = _display->createRect(200, 100, 300, 250);
         _display->setTexture(changeLibButton, {"./assets/button_texture.png", 180, 180, 180, 255});
@@ -59,7 +59,7 @@ namespace arcade {
         exit->setPosition(1920 / 2 - 100, 1080 / 2 + 100);
         bool running = true;
         while (running) {
-            EEvent event = _displayGraphic->pollEvent();
+            EEvent event = _display->pollEvent();
             if (event == EEvent::QUIT || event == EEvent::ESCAPE)
                 running = false;
             _display->clear();
@@ -80,7 +80,7 @@ namespace arcade {
             _display = _loaderGraphic.getInstance(_handleGraphic);
             _name = _loaderGraphic.getName(_handleGraphic);
             if (_name == "SDL2")
-                _displayGraphic->init("SDL2", 1920, 1080);
+                _display->init("SDL2", 1920, 1080);
         } else
             throw Exception("Error: '" + path + "' not a graphical library");
     }
