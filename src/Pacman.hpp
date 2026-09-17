@@ -32,6 +32,8 @@ namespace arcade {
             void displayPacman(IDisplayModule *display);
             void updateDirection(EEvent event);
             void movePacman();
+            int handleX(int x) const;
+            int handleY(int y) const;
             void displayGhosts(IDisplayModule *display);
             void moveGhosts(IDisplayModule *display);
             bool isWalkableTile(int x, int y) const;
@@ -50,6 +52,8 @@ namespace arcade {
             Bounds _rectBounds;
             int _dirX = 1;
             int _dirY = 0;
+            int _nextDirX = 1;
+            int _nextDirY = 0;
             std::chrono::steady_clock::time_point _lastMove = std::chrono::steady_clock::now();
             std::chrono::steady_clock::time_point _ghostLastMove = std::chrono::steady_clock::now();
             std::chrono::steady_clock::time_point _ghostCageStart = std::chrono::steady_clock::now();

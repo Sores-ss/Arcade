@@ -36,6 +36,24 @@ extern "C" {
 }
 
 namespace arcade {
+    int Pacman::handleX(int x) const
+    {
+        if (x < 1)
+            return MAP_WIDTH - 2;
+        if (x >= MAP_WIDTH - 1)
+            return 1;
+        return x;
+    }
+
+    int Pacman::handleY(int y) const
+    {
+        if (y < 1)
+            return MAP_HEIGHT - 2;
+        if (y >= MAP_HEIGHT - 1)
+            return 1;
+        return y;
+    }
+
     void Pacman::loadMap(IDisplayModule *display)
     {
         _windowSize = display->getWindowSize();
@@ -116,20 +134,20 @@ namespace arcade {
     void Pacman::updateDirection(EEvent event)
     {
         if (event == UP) {
-            _dirX = 0;
-            _dirY = -1;
+            _nextDirX = 0;
+            _nextDirY = -1;
         }
         if (event == DOWN) {
-            _dirX = 0;
-            _dirY = 1;
+            _nextDirX = 0;
+            _nextDirY = 1;
         }
         if (event == LEFT) {
-            _dirX = -1;
-            _dirY = 0;
+            _nextDirX = -1;
+            _nextDirY = 0;
         }
         if (event == RIGHT) {
-            _dirX = 1;
-            _dirY = 0;
+            _nextDirX = 1;
+            _nextDirY = 0;
         }
         if (event == ENTER)
             pause();
@@ -139,20 +157,18 @@ namespace arcade {
     {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastMove);
-        int nextX = _pacmanStartX + _dirX;
-        int nextY = _pacmanStartY + _dirY;
 
         if (elapsed.count() < 120)
             return;
         _lastMove = now;
-        if (nextX < 1)
-            nextX = MAP_WIDTH - 2;
-        if (nextX >= MAP_WIDTH - 1)
-            nextX = 1;
-        if (nextY < 1)
-            nextY = MAP_HEIGHT - 2;
-        if (nextY >= MAP_HEIGHT - 1)
-            nextY = 1;
+        int wantedX = handleX(_pacmanStartX + _nextDirX);
+        int wantedY = handleY(_pacmanStartY + _nextDirY);
+        if (map[wantedY][wantedX] != '#') {
+            _dirX = _nextDirX;
+            _dirY = _nextDirY;
+        }
+        int nextX = handleX(_pacmanStartX + _dirX);
+        int nextY = handleY(_pacmanStartY + _dirY);
         if (map[nextY][nextX] != '#') {
             _pacmanStartX = nextX;
             _pacmanStartY = nextY;
@@ -187,6 +203,17 @@ namespace arcade {
             }
         }
         if (map[_pacmanStartY][_pacmanStartX] == '0') {
+            IRect *gum = _gumMap[_pacmanStartY][_pacmanStartX];
+            if (gum) {
+                for (auto &tile : _map) {
+                    if (tile.rect == gum) {
+                        tile.visible = false;
+                        break;
+                    }
+                }
+            }
+            _gumMap[_pacmanStartY][_pacmanStartX] = nullptr;
+            map[_pacmanStartY][_pacmanStartX] = ' ';
             _superSonic = 1;
             _ghostSpeed = 250;
             _superSonicStart = std::chrono::steady_clock::now();
