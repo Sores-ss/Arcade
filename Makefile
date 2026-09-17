@@ -15,6 +15,10 @@ SDL_LIB = lib/arcade_sdl2.so
 SDL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 SDL_SRC = src/SDL2.cpp
 
+GTK_LIB = lib/arcade_gtk.so
+GTK_SRC = src/GTK.cpp
+GTK_FLAGS = $(shell pkg-config --cflags --libs gtk4 2>/dev/null || pkg-config --cflags --libs gtk+-3.0 2>/dev/null)
+
 NCURSES_LIB = lib/arcade_ncurses.so
 NCURSES_SRC = src/Ncurses.cpp
 
@@ -32,7 +36,11 @@ core: $(NAME)
 $(NAME): $(OBJ)
 	g++ -o $(NAME) $(OBJ) $(CXXFLAGS)
 
-graphicals: $(SDL_LIB) $(NCURSES_LIB)
+graphicals: $(SDL_LIB) $(NCURSES_LIB) $(GTK_LIB)
+
+$(GTK_LIB): $(GTK_SRC)
+	mkdir -p lib
+	g++ -shared -fPIC $(CXXFLAGS) -o $(GTK_LIB) $(GTK_SRC) $(GTK_FLAGS)
 
 $(NCURSES_LIB): $(NCURSES_SRC)
 	mkdir -p lib
@@ -55,6 +63,6 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME) $(SDL_LIB) $(NCURSES_LIB) $(SNAKE_LIB) $(PACMAN_LIB)
+	rm -f $(NAME) $(SDL_LIB) $(NCURSES_LIB) $(GTK_LIB) $(SNAKE_LIB) $(PACMAN_LIB)
 
 re: fclean core graphicals games
