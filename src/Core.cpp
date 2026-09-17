@@ -180,10 +180,8 @@ namespace arcade {
             delete game;
         for (auto &handle : handles)
             _loaderGame.close(handle);
-        if (_game != nullptr) {
-            _game->stop();
+        if (_game != nullptr)
             _loaderGame.close(_handleGame);
-        }
     }
 
     void Core::run(const std::string &lib)

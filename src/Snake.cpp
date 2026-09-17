@@ -359,9 +359,4 @@ namespace arcade {
         else
             updateStatusText("RUNNING");
     }
-
-    void Snake::stop()
-    {
-        _running = false;
-    }
 }

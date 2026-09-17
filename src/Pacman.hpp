@@ -23,7 +23,6 @@ namespace arcade {
             ~Pacman() = default;
             void run(IDisplayModule *display) override;
             void pause() override;
-            void stop() override;
         private:
             int _score = 0;
             size_t _pacmanStartX = 13;
@@ -114,7 +113,6 @@ namespace arcade {
             int _cageBottom = 17;
             int _cageExitX = 13;
             bool _initGhostPosition = false;
-            bool _running = false;
             int _superSonic = 0;
             int _ghostSpeed = 200;
             std::chrono::steady_clock::time_point _superSonicStart;

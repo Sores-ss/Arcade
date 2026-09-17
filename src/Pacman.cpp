@@ -285,13 +285,13 @@ namespace arcade {
 
     void Pacman::run(IDisplayModule *display)
     {
-        _running = true;
+        bool running = true;
         resetGame(display);
-        while (_running) {
+        while (running) {
             auto now = std::chrono::steady_clock::now();
             EEvent event = display->pollEvent();
             if (event == QUIT || event == ESCAPE)
-                _running = false;
+                running = false;
             if (event == ENTER && (_state == "GAME OVER" || _state == "VICTORY")) {
                 resetGame(display);
                 continue;
@@ -480,11 +480,5 @@ namespace arcade {
             _state = "PAUSED";
         else
             _state = "RUNNING";
-    }
-
-    void Pacman::stop()
-    {
-        _running = false;
-        std::cout << "Pacman stopped" << std::endl;
     }
 }

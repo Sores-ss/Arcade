@@ -17,7 +17,6 @@ namespace arcade {
             ~Snake() = default;
             void run(IDisplayModule *display) override;
             void pause() override;
-            void stop() override;
         private:
             enum Direction {
                 DIR_UP,
