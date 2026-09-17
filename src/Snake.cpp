@@ -14,10 +14,12 @@
 
 __attribute__((constructor)) void create(void)
 {
+
 }
 
 __attribute__((destructor)) void destroy(void)
 {
+    
 }
 
 extern "C" {

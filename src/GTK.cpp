@@ -10,22 +10,29 @@
 
 __attribute__((constructor)) void create()
 {
-    std::cout << "Opening libgtk..." << std::endl;
+    return;
 }
 
 __attribute__((destructor)) void destroy()
 {
-    std::cout << "Closing libgtk..." << std::endl;
+    return;
 }
 
 extern "C" {
     arcade::GTK *myEntryPoint()
     {
-        std::cout << "Loading libgtk..." << std::endl;
         return new arcade::GTK();
     }
-    arcade::EType getLibType()  { return arcade::EType::GRAPHICAL; }
-    const std::string getLibName() { return "GTK"; }
+    
+    arcade::EType getLibType()
+    {
+        return arcade::EType::GRAPHICAL;
+    }
+
+    const std::string getLibName()
+    {
+        return "GTK";
+    }
 }
 
 namespace arcade {

@@ -13,21 +13,19 @@
 #include <SDL2/SDL_image.h>
 #include <algorithm>
 
-
 __attribute__((constructor)) void create(void)
 {
-    std::cout << "Opening libsdl2..." << std::endl;
+    return;
 }
 
 __attribute__((destructor)) void destroy(void)
 {
-    std::cout << "Closing libsdl2..." << std::endl;
+    return;
 }
 
 extern "C" {
     arcade::SDL2 *myEntryPoint(void)
     {
-        std::cout << "Loading libsdl2.." << std::endl;
         return new arcade::SDL2();
     }
 

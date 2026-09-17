@@ -10,18 +10,17 @@
 
 __attribute__((constructor)) void create(void)
 {
-    std::cout << "Opening pacman..." << std::endl;
+    return;
 }
 
 __attribute__((destructor)) void destroy(void)
 {
-    std::cout << "Closing pacman..." << std::endl;
+    return;
 }
 
 extern "C" {
     arcade::Pacman *myEntryPoint(void)
     {
-        std::cout << "Loading pacman.." << std::endl;
         return new arcade::Pacman();
     }
 

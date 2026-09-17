@@ -11,18 +11,18 @@
 
 __attribute__((constructor)) void create(void)
 {
-    std::cout << "Opening libNcurses..." << std::endl;
+    return;
 }
 
 __attribute__((destructor)) void destroy(void)
 {
-    std::cout << "Closing libNcurses..." << std::endl;
+    return;
 }
 
 extern "C" {
     arcade::Ncurses *myEntryPoint(void)
     {
-        std::cout << "Loading libNcurses.." << std::endl;
+        //std::cout << "Loading libNcurses.." << std::endl;
         return new arcade::Ncurses();
     }
 
