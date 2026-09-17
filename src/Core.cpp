@@ -30,11 +30,17 @@ namespace arcade {
     {
         _libs = initLibList(lib);
         loadLib(lib);
+        IRect *playButton = _display->createRect(200, 100, 300, 250);
+        _display->setTexture(playButton, {"./assets/button_texture.png", 180, 180, 180, 255});
+        _display->setText(playButton, "PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        playButton->setPosition(1920 / 2 - 100, 1080 / 2 - 100);
         bool running = true;
         while (running) {
             EEvent event = _display->pollEvent();
             if (event == EEvent::QUIT || event == EEvent::ESCAPE)
                 running = false;
+            _display->clear();
+            _display->displayRect(playButton);
             _display->render();
         }
         _display->stop();

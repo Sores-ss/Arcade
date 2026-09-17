@@ -33,6 +33,8 @@ namespace arcade {
                     SDL_Texture *getTextTexture() const {return _textTexture;}
                     SDL_Rect &getTextRect() {return _textRect;}
                     void setTexture(SDL_Texture *texture) {_texture = texture;}
+                    void setTextRect(SDL_Rect rect) {_textRect = rect;}
+                    void setTextTexture(SDL_Texture *textTexture) {_textTexture = textTexture;}
                     SDL_Texture *getTexture() const {return _texture;}
                     bool isMouseOver() const override;
                     void setColor(SDL_Color color) {_color = color;}
@@ -52,6 +54,6 @@ namespace arcade {
             void setText(IRect *rect, std::string text, Texture_t texture) override;
             const std::string &getName() const override;
             const EType &getType() const override;
-            const IRect *createRect(size_t width, size_t height, size_t x, size_t y) override;
+            IRect *createRect(size_t width, size_t height, size_t x, size_t y) override;
     };
 }

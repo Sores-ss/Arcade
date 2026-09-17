@@ -41,6 +41,6 @@ namespace arcade {
             virtual const EType &getType() const = 0;
             virtual void displayRect(IRect *b) const = 0;
             virtual void setTexture(IRect *rect, Texture_t texture) = 0;
-            virtual const IRect *createRect(size_t width, size_t height, size_t x, size_t y) = 0;
+            virtual IRect *createRect(size_t width, size_t height, size_t x, size_t y) = 0;
     };
 }

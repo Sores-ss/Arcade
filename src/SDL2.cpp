@@ -44,6 +44,7 @@ namespace arcade {
     void SDL2::init(std::string name, size_t width, size_t height) {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
         IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+        TTF_Init();
         SDL_Window* window = SDL_CreateWindow(
             name.c_str(),
             SDL_WINDOWPOS_CENTERED,
@@ -79,6 +80,7 @@ namespace arcade {
             SDL_DestroyRenderer(_renderer);
         if (_window)
             SDL_DestroyWindow(_window);
+        TTF_Quit();
         IMG_Quit();
         SDL_Quit();
     }
@@ -109,11 +111,11 @@ namespace arcade {
             SDL_RenderFillRect(_renderer, &rect);
         }
         if (rectObj->getTextTexture()) {
-            SDL_RenderCopy(_renderer, rectObj->getTextTexture(), NULL, &rectObj->getRect());
+            SDL_RenderCopy(_renderer, rectObj->getTextTexture(), NULL, &rectObj->getTextRect());
         }
     }
 
-    const IRect *SDL2::createRect(size_t width, size_t height, size_t x, size_t y) {
+    IRect *SDL2::createRect(size_t width, size_t height, size_t x, size_t y) {
         SDL_Rect rect = {
             static_cast<int>(x),
             static_cast<int>(y),
@@ -139,6 +141,8 @@ namespace arcade {
     {
         _rect.x = x;
         _rect.y = y;
+        _textRect.x = _rect.x + (_rect.w - _textRect.w) / 2;
+        _textRect.y = _rect.y + (_rect.h - _textRect.h) / 2;
     }
 
     void SDL2::setText(IRect *rectObj, std::string text, Texture_t texture)
@@ -151,12 +155,12 @@ namespace arcade {
 
         SDL_Color color = {255, 255, 255, 255};
 
-        SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Bonjour", color);
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), color);
 
         SDL_Texture* textTexture = SDL_CreateTextureFromSurface(_renderer, textSurface);
         SDL_Rect textRect;
-        textRect.w = textSurface->w;
-        textRect.h = textSurface->h;
+        textRect.w = textSurface->w * 3;
+        textRect.h = textSurface->h * 3;
 
         SDLRect *sdlRect = dynamic_cast<SDLRect *>(rectObj);
         if (!sdlRect)
@@ -165,6 +169,8 @@ namespace arcade {
         textRect.x = rect.x + (rect.w - textRect.w) / 2;
         textRect.y = rect.y + (rect.h - textRect.h) / 2;
         SDL_FreeSurface(textSurface);
+        sdlRect->setTextRect(textRect);
+        sdlRect->setTextTexture(textTexture);
         _textures.push_back(textTexture);
     }
 
