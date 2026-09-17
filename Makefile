@@ -15,9 +15,12 @@ GRAPHICAL_LIB = lib/arcade_sdl2.so
 GRAPHICAL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf
 GRAPHICAL_SRC = src/SDL2.cpp
 
+GAME_LIB = lib/arcade_snake.so
+GAME_SRC = src/Snake.cpp
+
 CXXFLAGS += -Isrc
 
-all: core graphicals
+all: core graphicals games
 
 core: $(NAME)
 
@@ -30,10 +33,16 @@ $(GRAPHICAL_LIB): $(GRAPHICAL_SRC)
 	mkdir -p lib
 	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC) $(GRAPHICAL_FLAGS)
 
+games: $(GAME_LIB)
+
+$(GAME_LIB): $(GAME_SRC)
+	mkdir -p lib
+	g++ -shared -fPIC $(CXXFLAGS) -o $(GAME_LIB) $(GAME_SRC)
+
 clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME) $(GRAPHICAL_LIB)
+	rm -f $(NAME) $(GRAPHICAL_LIB) $(GAME_LIB)
 
-re: fclean core graphicals
+re: fclean core graphicals games

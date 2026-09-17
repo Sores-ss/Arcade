@@ -18,18 +18,10 @@ namespace arcade {
         u_int8_t a;
     } Texture_t;
 
-    typedef struct rectInfo_s {
-        std::size_t x;
-        std::size_t y;
-        std::size_t w;
-        std::size_t h;
-    } rectInfo_t;
-
     class IRect {
         public:
             IRect() = default;
             virtual ~IRect() = default;
-            virtual rectInfo_t getRectInfo() const = 0;
             virtual bool isMouseOver() const = 0;
             virtual void setPosition(std::size_t x, std::size_t y) = 0;
     };

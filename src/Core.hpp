@@ -18,7 +18,6 @@ namespace arcade {
         public:
             Core() = default;
             ~Core() = default;
-            static std::vector<std::string> initLibList(std::string lib);
             void run(const std::string &lib);
         private:
             std::vector<std::string> _libs;
@@ -26,10 +25,13 @@ namespace arcade {
             DLLoader<IGameModule> _loaderGame;
             void *_handleGraphic = nullptr;
             void *_handleGame = nullptr;
-            IDisplayModule *_display = nullptr;
-            IGameModule *_game = nullptr;
+            IDisplayModule *_displayGraphic = nullptr;
+            IGameModule *_displayGame = nullptr;
             EType _type;
             std::string _name;
-            void loadLib(const std::string &path);
+            void loadGraphic(const std::string &path);
+            void loadGame(const std::string &path);
+            std::vector<std::string> initLibList(std::string lib);
+            void runGame(const std::string path);
     };
 }
