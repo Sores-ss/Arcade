@@ -29,13 +29,12 @@ Provide a graphical library path to launch. The system will auto-discover all co
 | **Backspace** | Delete character in text input |
 | **Delete** | Quit the program |
 | **F1** | Move to next game (when in-game) |
+| **F5** | Reset the game you are playing |
 | **A-Z** | Type text (name input) |
 
 ## Interface Sharing
 
-Collaborated group email: 
-- mato.urbanac@epitech.eu
-- naelle.guerin@epitech.eu
+We collaborated with a group to develop the interface. Group leader: mato.urbanac@epitech.eu
 
 ## Documentation
 
