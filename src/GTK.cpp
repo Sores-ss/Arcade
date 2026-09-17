@@ -104,8 +104,19 @@ namespace arcade {
             case GDK_KEY_Tab:
                 gtk->queueEvent(arcade::EEvent::TAB);
                 break;
+            case GDK_KEY_BackSpace:
+                gtk->queueEvent(arcade::EEvent::BACKSPACE);
+                break;
             default:
-                handled = false;
+                if (event->keyval >= GDK_KEY_a && event->keyval <= GDK_KEY_z) {
+                    gtk->queueEvent(static_cast<arcade::EEvent>(
+                        arcade::EEvent::A + (event->keyval - GDK_KEY_a)));
+                } else if (event->keyval >= GDK_KEY_A && event->keyval <= GDK_KEY_Z) {
+                    gtk->queueEvent(static_cast<arcade::EEvent>(
+                        arcade::EEvent::A + (event->keyval - GDK_KEY_A)));
+                } else {
+                    handled = false;
+                }
                 break;
         }
         return handled ? TRUE : FALSE;
@@ -129,7 +140,6 @@ namespace arcade {
         auto it = map.find(key);
         if (it != map.end())
             return it->second;
-
         std::string cls = "arc-" + std::to_string(counter++);
         std::ostringstream css;
         css << '.' << cls << " {"
@@ -142,7 +152,6 @@ namespace arcade {
         else
             css << "border:none;";
         css << '}';
-
         GtkCssProvider *provider = gtk_css_provider_new();
         gtk_css_provider_load_from_data(provider, css.str().c_str(), -1, nullptr);
         gtk_style_context_add_provider_for_screen(
@@ -199,8 +208,8 @@ namespace arcade {
             gtk_widget_destroy(_window);
             drainMainContext();
         }
-        _window  = nullptr;
-        _fixed   = nullptr;
+        _window = nullptr;
+        _fixed = nullptr;
         _running = false;
     }
 
@@ -224,9 +233,6 @@ namespace arcade {
         rect->setSize({bounds.w, bounds.h});
         return rect;
     }
-
-    void GTK::setMusic([[maybe_unused]] std::string fp)  {}
-    void GTK::playSound([[maybe_unused]] std::string fp) const {}
 
     void GTK::render()
     {
@@ -276,7 +282,7 @@ namespace arcade {
     {
         _parent = nullptr;
         _widget = nullptr;
-        _cache  = nullptr;
+        _cache = nullptr;
     }
 
     void GTK::GTKRect::attachTo(GtkWidget *parent, CssCache *cache)
@@ -284,7 +290,7 @@ namespace arcade {
         if (parent == nullptr || _widget != nullptr || !GTK_IS_FIXED(parent))
             return;
         _parent = parent;
-        _cache  = cache;
+        _cache = cache;
         _widget = gtk_button_new();
 
         GtkStyleContext *ctx = gtk_widget_get_style_context(_widget);
@@ -334,7 +340,7 @@ namespace arcade {
         if (_textColor.r != texture.r || _textColor.g != texture.g ||
             _textColor.b != texture.b || _textColor.a != texture.a)
         {
-            _textColor   = texture;
+            _textColor = texture;
             _stylesDirty = true;
         }
     }
@@ -345,8 +351,8 @@ namespace arcade {
             _border.r != texture.r || _border.g != texture.g ||
             _border.b != texture.b || _border.a != texture.a)
         {
-            _border      = texture;
-            _hasBorder   = true;
+            _border = texture;
+            _hasBorder = true;
             _stylesDirty = true;
         }
     }
@@ -356,7 +362,7 @@ namespace arcade {
         if (_texture.r != texture.r || _texture.g != texture.g ||
             _texture.b != texture.b || _texture.a != texture.a)
         {
-            _texture     = texture;
+            _texture = texture;
             _stylesDirty = true;
         }
     }
@@ -374,7 +380,7 @@ namespace arcade {
         const std::string &cls = _cache->get(key, _texture, _textColor, _border, _hasBorder);
         gtk_style_context_add_class(ctx, cls.c_str());
         _appliedClass = cls;
-        _stylesDirty  = false;
+        _stylesDirty = false;
     }
 
     void GTK::GTKRect::display() const
