@@ -35,10 +35,11 @@ namespace arcade {
             int handleX(int x) const;
             int handleY(int y) const;
             void displayGhosts(IDisplayModule *display);
-            void moveGhosts(IDisplayModule *display);
+            void moveGhosts();
             bool isWalkableTile(int x, int y) const;
             bool canGhostMoveTo(size_t ghostIndex, int x, int y) const;
             bool isInCage(int x, int y) const;
+            void resetGame(IDisplayModule *display);
             IRect *_rectBase;
             IRect *_rectScore;
             IRect *_rectWord;
@@ -57,7 +58,7 @@ namespace arcade {
             std::chrono::steady_clock::time_point _lastMove = std::chrono::steady_clock::now();
             std::chrono::steady_clock::time_point _ghostLastMove = std::chrono::steady_clock::now();
             std::chrono::steady_clock::time_point _ghostCageStart = std::chrono::steady_clock::now();
-            std::vector<std::string> map = {
+            const std::vector<std::string> _initialMap = {
                 "############################",
                 "#............##.......0....#",
                 "#.####.#####.##.#####.####.#",
@@ -90,6 +91,7 @@ namespace arcade {
                 "#..........................#",
                 "############################",
             };
+            std::vector<std::string> map;
             std::vector<std::vector<IRect *>> _gumMap;
             bool _paused = false;
             std::string _state = "RUNNING";
@@ -115,5 +117,6 @@ namespace arcade {
             int _superSonic = 0;
             int _ghostSpeed = 200;
             std::chrono::steady_clock::time_point _superSonicStart;
+            size_t _tileSize = 15;
     };
 }
