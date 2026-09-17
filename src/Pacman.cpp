@@ -131,22 +131,22 @@ namespace arcade {
                     bool right = (j + 1 >= map[i].size() || map[i][j + 1] != '#');
                     if (top) {
                         std::shared_ptr<IRect> topBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
-                        topBorder->setTexture({"", 21, 1, 87, 0});
+                        topBorder->setTexture({"", 21, 1, 87, 255});
                         _map.push_back({topBorder, true});
                     }
                     if (bot) {
                         std::shared_ptr<IRect> bottomBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize + _tileSize - borderThick});
-                        bottomBorder->setTexture({"", 21, 1, 87, 0});
+                        bottomBorder->setTexture({"", 21, 1, 87, 255});
                         _map.push_back({bottomBorder, true});
                     }
                     if (left) {
                         std::shared_ptr<IRect> leftBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
-                        leftBorder->setTexture({"", 21, 1, 87, 0});
+                        leftBorder->setTexture({"", 21, 1, 87, 255});
                         _map.push_back({leftBorder, true});
                     }
                     if (right) {
                         std::shared_ptr<IRect> rightBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize + _tileSize - borderThick, _rectBounds.y + i * _tileSize});
-                        rightBorder->setTexture({"", 21, 1, 87, 0});
+                        rightBorder->setTexture({"", 21, 1, 87, 255});
                         _map.push_back({rightBorder, true});
                     }
                 }
@@ -166,13 +166,13 @@ namespace arcade {
                 }
             }
         }
-        display->setBackground({"./assets/pacman_background.jpg", 0, 0, 0, 0});
+        display->setBackground({"./assets/pacman_background.jpg", 0, 0, 0, 255});
         _rectBase->setTexture({"", 0, 0, 0, 0});
         _rectScore->setTexture({"", 0, 0, 0, 0});
         _rectWord->setTexture({"", 0, 0, 0, 0});
         std::string scoreValue = std::to_string(_score);
-        _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
-        _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
+        _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
     }
 
     void Pacman::displayPacman(std::shared_ptr<IDisplayModule> display)
@@ -289,7 +289,7 @@ namespace arcade {
         _pacman->setTexture({_pacmanDirection, 224, 213, 0, 255});
     }
 
-    void Pacman::run(std::shared_ptr<IDisplayModule> display)
+    void Pacman::run(std::shared_ptr<IDisplayModule> display, const std::string name)
     {
         bool running = true;
         _changeDisplay = false;
@@ -330,8 +330,8 @@ namespace arcade {
                     moveGhosts();
             }
             std::string scoreValue = std::to_string(_score);
-            _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
-            _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
+            _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+            _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
             display->clearWindow();
             _rectBase->display();
             for (auto &mapRect : _map)
@@ -340,6 +340,11 @@ namespace arcade {
             _rectScore->display();
             _rectWord->display();
             display->render();
+        }
+        std::ofstream file("scores.txt", std::ios::out);
+        if (file) {
+            file << name << " Pacman " << _score << std::endl;
+            file.close();
         }
     }
 
@@ -362,7 +367,7 @@ namespace arcade {
             _ghosts[i].rect = display->createRect({_tileSize, _tileSize, _rectBounds.x + _ghosts[i].x * _tileSize, _rectBounds.y + _ghosts[i].y * _tileSize});
             if (_ghosts[i].rect) {
                 if (_superSonic)
-                    _ghosts[i].rect->setTexture({"./assets/blue_eat_pacman.png", 221, 0, 221, 255});
+                    _ghosts[i].rect->setTexture({"./assets/blue_eat_pacman.png", 1, 120, 181, 255});
                 else
                     _ghosts[i].rect->setTexture({_ghosts[i].texture, 255, 255, 255, 255});
                 _map.push_back({_ghosts[i].rect, true});
@@ -475,11 +480,11 @@ namespace arcade {
                 _rectBounds.y + ghost.y * _tileSize
             });
             if (_superSonic) {
-                ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 221, 0, 221, 0});
+                ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 0, 120, 181, 255});
                 if (std::chrono::duration_cast<std::chrono::seconds>(now - _superSonicStart).count() >= 10) {
                     std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
                     for (int i = 0; i < 4; i++)
-                        _ghosts[i].rect->setTexture({textures[i], 255, 255, 255, 0});
+                        _ghosts[i].rect->setTexture({textures[i], 255, 255, 255, 255});
                     _superSonic = 0;
                 }
                 if (ghost.x == (int)_pacmanStartX && ghost.y == (int)_pacmanStartY) {

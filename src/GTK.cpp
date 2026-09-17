@@ -73,16 +73,16 @@ namespace arcade {
             gtk->markStopped();
     }
 
-    gboolean GTK::on_key_pressed([[maybe_unused]] GtkEventControllerKey *ctrl,
-        guint keyval,
-        [[maybe_unused]] guint keycode,
-        [[maybe_unused]] GdkModifierType state,
+    gboolean GTK::on_key_pressed([[maybe_unused]] GtkWidget *widget,
+        GdkEventKey *event,
         gpointer user_data)
     {
+        (void)widget;
         auto *gtk = static_cast<arcade::GTK *>(user_data);
         if (!gtk)
             return FALSE;
-        switch (keyval) {
+        bool handled = true;
+        switch (event->keyval) {
             case GDK_KEY_Escape:
                 gtk->queueEvent(arcade::EEvent::ESCAPE);
                 break;
@@ -105,19 +105,21 @@ namespace arcade {
                 gtk->queueEvent(arcade::EEvent::TAB);
                 break;
             default:
+                handled = false;
                 break;
         }
-        return FALSE;
+        return handled ? TRUE : FALSE;
     }
 
-    void GTK::on_click_pressed([[maybe_unused]] GtkGestureClick *g,
-        [[maybe_unused]] int n,
-        [[maybe_unused]] double x, [[maybe_unused]] double y,
+    gboolean GTK::on_click_pressed([[maybe_unused]] GtkWidget *widget,
+        [[maybe_unused]] GdkEventButton *event,
         gpointer user_data)
     {
+        (void)widget;
         auto *gtk = static_cast<arcade::GTK *>(user_data);
         if (gtk)
             gtk->queueEvent(arcade::EEvent::CLICK);
+        return TRUE;
     }
 
     const std::string &CssCache::get(const std::string &key,
@@ -142,9 +144,9 @@ namespace arcade {
         css << '}';
 
         GtkCssProvider *provider = gtk_css_provider_new();
-        gtk_css_provider_load_from_string(provider, css.str().c_str());
-        gtk_style_context_add_provider_for_display(
-            gdk_display_get_default(),
+        gtk_css_provider_load_from_data(provider, css.str().c_str(), -1, nullptr);
+        gtk_style_context_add_provider_for_screen(
+            gdk_screen_get_default(),
             GTK_STYLE_PROVIDER(provider),
             GTK_STYLE_PROVIDER_PRIORITY_USER);
         g_object_unref(provider);
@@ -158,34 +160,30 @@ namespace arcade {
     {
         if (_window != nullptr)
             stop();
-        gtk_init();
+        int argc = 0;
+        char **argv = nullptr;
+        gtk_init(&argc, &argv);
         _windowSize = size;
-        _window = gtk_window_new();
+        _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         _fixed = gtk_fixed_new();
-        gtk_widget_add_css_class(_fixed, "arc-fixed");
+        GtkStyleContext *fixedCtx = gtk_widget_get_style_context(_fixed);
+        gtk_style_context_add_class(fixedCtx, "arc-fixed");
         {
             GtkCssProvider *p = gtk_css_provider_new();
-            gtk_css_provider_load_from_string(p,
-                ".arc-fixed { background: transparent; padding:0; margin:0; }");
-            gtk_style_context_add_provider_for_display(
-                gdk_display_get_default(),
-                GTK_STYLE_PROVIDER(p),
-                GTK_STYLE_PROVIDER_PRIORITY_USER);
+            gtk_css_provider_load_from_data(p, ".arc-fixed { background: transparent; padding:0; margin:0; }", 1, nullptr);
+            gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(p), GTK_STYLE_PROVIDER_PRIORITY_USER);
             g_object_unref(p);
         }
-        gtk_window_set_child(GTK_WINDOW(_window), _fixed);
+        gtk_container_add(GTK_CONTAINER(_window), _fixed);
         gtk_window_set_title(GTK_WINDOW(_window), name.c_str());
         gtk_window_set_default_size(GTK_WINDOW(_window),
             static_cast<int>(size.w), static_cast<int>(size.h));
         gtk_window_set_resizable(GTK_WINDOW(_window), FALSE);
-        auto *keyCtrl = gtk_event_controller_key_new();
-        g_signal_connect(keyCtrl, "key-pressed", G_CALLBACK(on_key_pressed), this);
-        gtk_widget_add_controller(_window, GTK_EVENT_CONTROLLER(keyCtrl));
-        auto *click = gtk_gesture_click_new();
-        g_signal_connect(click, "pressed", G_CALLBACK(on_click_pressed), this);
-        gtk_widget_add_controller(_window, GTK_EVENT_CONTROLLER(click));
+        gtk_widget_add_events(_window, GDK_KEY_PRESS_MASK | GDK_BUTTON_PRESS_MASK);
+        g_signal_connect(_window, "key-press-event", G_CALLBACK(on_key_pressed), this);
+        g_signal_connect(_window, "button-press-event", G_CALLBACK(on_click_pressed), this);
         g_signal_connect(_window, "destroy", G_CALLBACK(on_window_destroy), this);
-        gtk_widget_set_visible(_window, TRUE);
+        gtk_widget_show_all(_window);
         _pendingEvent = EEvent::UNDEFINED;
         _running = true;
     }
@@ -197,8 +195,7 @@ namespace arcade {
         _cssCache.clear();
 
         if (_window != nullptr && GTK_IS_WINDOW(_window))
-            gtk_window_destroy(GTK_WINDOW(_window));
-
+            gtk_widget_destroy(_window);
         _window  = nullptr;
         _fixed   = nullptr;
         _running = false;
@@ -211,11 +208,8 @@ namespace arcade {
             return;
         GtkCssProvider *p = gtk_css_provider_new();
         std::string css = "window { background: " + rgbaCss(texture) + "; }";
-        gtk_css_provider_load_from_string(p, css.c_str());
-        gtk_style_context_add_provider_for_display(
-            gdk_display_get_default(),
-            GTK_STYLE_PROVIDER(p),
-            GTK_STYLE_PROVIDER_PRIORITY_USER);
+        gtk_css_provider_load_from_data(p, css.c_str(), -1, nullptr);
+        gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(p), GTK_STYLE_PROVIDER_PRIORITY_USER);
         g_object_unref(p);
     }
 
@@ -239,7 +233,7 @@ namespace arcade {
     EEvent GTK::pollEvent()
     {
         drainMainContext();
-        EEvent ev     = _pendingEvent;
+        EEvent ev = _pendingEvent;
         _pendingEvent = EEvent::UNDEFINED;
         return ev;
     }
@@ -248,12 +242,13 @@ namespace arcade {
     {
         if (_fixed == nullptr || !GTK_IS_FIXED(_fixed))
             return;
-        for (GtkWidget *c = gtk_widget_get_first_child(_fixed);
-            c != nullptr; c = gtk_widget_get_next_sibling(c))
-        {
-            if (GTK_IS_WIDGET(c))
-                gtk_widget_set_visible(c, FALSE);
+        GList *children = gtk_container_get_children(GTK_CONTAINER(_fixed));
+        for (GList *it = children; it != nullptr; it = it->next) {
+            GtkWidget *child = GTK_WIDGET(it->data);
+            if (GTK_IS_WIDGET(child))
+                gtk_widget_set_visible(child, FALSE);
         }
+        g_list_free(children);
     }
 
     void GTK::queueEvent(EEvent event) { _pendingEvent = event; }
@@ -268,9 +263,8 @@ namespace arcade {
 
     GTK::GTKRect::~GTKRect()
     {
-        if (_widget != nullptr && GTK_IS_WIDGET(_widget)) {
+        if (_widget != nullptr && GTK_IS_WIDGET(_widget))
             g_signal_handlers_disconnect_by_data(_widget, this);
-        }
         _parent = nullptr;
         _widget = nullptr;
     }
@@ -290,30 +284,21 @@ namespace arcade {
         _cache  = cache;
         _widget = gtk_button_new();
 
-        gtk_widget_add_css_class(_widget, "arc-cell");
+        GtkStyleContext *ctx = gtk_widget_get_style_context(_widget);
+        gtk_style_context_add_class(ctx, "arc-cell");
         {
             static bool cellCssDone = false;
             if (!cellCssDone) {
                 GtkCssProvider *p = gtk_css_provider_new();
-                gtk_css_provider_load_from_string(p,
-                    ".arc-cell, .arc-cell > * {"
-                    "  padding:0; margin:0; min-width:0; min-height:0;"
-                    "  outline:none; box-shadow:none; border-radius:0; }");
-                gtk_style_context_add_provider_for_display(
-                    gdk_display_get_default(),
-                    GTK_STYLE_PROVIDER(p),
-                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                gtk_css_provider_load_from_data(p, ".arc-cell, .arc-cell > * {  padding:0; margin:0; min-width:0; min-height:0;  outline:none; box-shadow:none; border-radius:0; }", -1, nullptr);
+                gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(p), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
                 g_object_unref(p);
                 cellCssDone = true;
             }
         }
-
-        g_signal_connect(_widget, "destroy",
-                        G_CALLBACK(on_rect_widget_destroy), this);
-        gtk_widget_set_focusable(_widget, FALSE);
-        gtk_fixed_put(GTK_FIXED(_parent), _widget,
-                    static_cast<double>(_bounds.x),
-                    static_cast<double>(_bounds.y));
+        g_signal_connect(_widget, "destroy", G_CALLBACK(on_rect_widget_destroy), this);
+        gtk_widget_set_can_focus(_widget, FALSE);
+        gtk_fixed_put(GTK_FIXED(_parent), _widget, static_cast<gint>(_bounds.x), static_cast<gint>(_bounds.y));
         gtk_widget_set_visible(_widget, FALSE);
     }
 
@@ -329,18 +314,15 @@ namespace arcade {
         _bounds.w = size.w;
         _bounds.h = size.h;
         if (_widget != nullptr && GTK_IS_WIDGET(_widget))
-            gtk_widget_set_size_request(_widget,
-                static_cast<int>(_bounds.w), static_cast<int>(_bounds.h));
+            gtk_widget_set_size_request(_widget, static_cast<int>(_bounds.w), static_cast<int>(_bounds.h));
     }
 
     void GTK::GTKRect::setPosition(Position position)
     {
         _bounds.x = position.x;
         _bounds.y = position.y;
-        if (_widget != nullptr && _parent != nullptr
-            && GTK_IS_WIDGET(_widget) && GTK_IS_FIXED(_parent))
-            gtk_fixed_move(GTK_FIXED(_parent), _widget,
-                static_cast<double>(_bounds.x), static_cast<double>(_bounds.y));
+        if (_widget != nullptr && _parent != nullptr && GTK_IS_WIDGET(_widget) && GTK_IS_FIXED(_parent))
+            gtk_fixed_move(GTK_FIXED(_parent), _widget, static_cast<gint>(_bounds.x), static_cast<gint>(_bounds.y));
     }
 
     void GTK::GTKRect::setText(std::string text, Texture texture)
@@ -382,12 +364,12 @@ namespace arcade {
             return;
         if (_cache == nullptr)
             return;
+        GtkStyleContext *ctx = gtk_widget_get_style_context(_widget);
         if (!_appliedClass.empty())
-            gtk_widget_remove_css_class(_widget, _appliedClass.c_str());
+            gtk_style_context_remove_class(ctx, _appliedClass.c_str());
         std::string key = makeCssKey(_texture, _textColor, _border, _hasBorder);
-        const std::string &cls = _cache->get(key, _texture, _textColor,
-            _border, _hasBorder);
-        gtk_widget_add_css_class(_widget, cls.c_str());
+        const std::string &cls = _cache->get(key, _texture, _textColor, _border, _hasBorder);
+        gtk_style_context_add_class(ctx, cls.c_str());
         _appliedClass = cls;
         _stylesDirty  = false;
     }

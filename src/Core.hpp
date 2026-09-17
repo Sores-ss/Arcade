@@ -29,6 +29,7 @@ namespace arcade {
             std::unique_ptr<IGameModule> _game = nullptr;
             EType _type;
             std::string _name;
+            std::string _graphicName;
             std::string _currentGraphicPath;
             std::string _currentGamePath;
             void loadGraphic(const std::string &path);
@@ -37,5 +38,8 @@ namespace arcade {
             std::vector<std::string> initLibList(std::string lib);
             std::string runGames(IRect &selector, bool &running);
             std::string runlib(IRect &selector, bool &running);
+            char eventToChar(EEvent event);
+            bool userName();
+            void displayScore();
     };
 }

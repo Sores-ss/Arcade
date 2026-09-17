@@ -15,7 +15,7 @@ namespace arcade {
         public:
             Snake() = default;
             ~Snake() = default;
-            void run(std::shared_ptr<IDisplayModule> display) override;
+            void run(std::shared_ptr<IDisplayModule> display, const std::string name) override;
             void pause() override;
             bool changeDisplay() override;
         private:

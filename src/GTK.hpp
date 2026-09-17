@@ -68,14 +68,11 @@ namespace arcade {
             static void drainMainContext();
             static void on_rect_widget_destroy([[maybe_unused]] GtkWidget *w, gpointer user_data);
             static void on_window_destroy([[maybe_unused]] GtkWidget *w, gpointer user_data);
-            static gboolean on_key_pressed([[maybe_unused]] GtkEventControllerKey *ctrl,
-                guint keyval,
-                [[maybe_unused]] guint keycode,
-                [[maybe_unused]] GdkModifierType state,
+            static gboolean on_key_pressed([[maybe_unused]] GtkWidget *widget,
+                GdkEventKey *event,
                 gpointer user_data);
-            static void on_click_pressed([[maybe_unused]] GtkGestureClick *g,
-                [[maybe_unused]] int n,
-                [[maybe_unused]] double x, [[maybe_unused]] double y,
+            static gboolean on_click_pressed([[maybe_unused]] GtkWidget *widget,
+                [[maybe_unused]] GdkEventButton *event,
                 gpointer user_data);
             void init(std::string name, Size size) override;
             const Size getWindowSize() const override;

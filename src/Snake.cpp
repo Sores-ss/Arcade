@@ -330,7 +330,7 @@ namespace arcade {
             tile->display();
     }
 
-    void Snake::run(std::shared_ptr<IDisplayModule> display)
+    void Snake::run(std::shared_ptr<IDisplayModule> display, [[maybe_unused]]const std::string name)
     {
         if (display == nullptr)
             return;

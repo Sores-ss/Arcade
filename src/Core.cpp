@@ -13,6 +13,13 @@
 #include <algorithm>
 
 namespace arcade {
+    char Core::eventToChar(EEvent event)
+    {
+        if (event >= EEvent::A && event <= EEvent::Z)
+            return (char)('A' + (event - EEvent::A));
+        return '\0';
+    }
+
     std::vector<std::string> Core::initLibList(std::string lib)
     {
         std::vector<std::string> newMap = std::vector<std::string>();
@@ -37,10 +44,16 @@ namespace arcade {
             _game = std::unique_ptr<IGameModule>(_loaderGame.getInstance(_handleGame));
             _currentGamePath = path;
         }
-        _game->run(_display);
+        _game->run(_display, _name);
         bool wantsDisplayChange = _game->changeDisplay();
-        if (wantsDisplayChange)
-            return changeDisplay();
+        if (wantsDisplayChange) {
+            std::string nextGraphic = changeDisplay();
+            _game.reset();
+            _loaderGame.close(_handleGame);
+            _handleGame = nullptr;
+            _currentGamePath.clear();
+            return nextGraphic;
+        }
         _game.reset();
         _loaderGame.close(_handleGame);
         _handleGame = nullptr;
@@ -90,7 +103,7 @@ namespace arcade {
                 graphicalLibs.push_back(lib);
                 handles.push_back(handle);
                 size_t y = firstY + static_cast<size_t>(libList.size()) * stepY;
-                std::shared_ptr<IRect> libRect = _display->createRect({buttonW, buttonH, baseX, y});
+                std::shared_ptr<IRect> libRect = _display->createRect({{buttonW, buttonH}, {baseX, y}});
                 libRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 libRect->setText(_loaderGraphic.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 libRect->setPosition({baseX, y});
@@ -168,7 +181,7 @@ namespace arcade {
                 gameLibs.push_back(lib);
                 handles.push_back(handle);
                 size_t y = firstY + static_cast<size_t>(gameList.size()) * stepY;
-                std::shared_ptr<IRect> gameRect = _display->createRect({buttonW, buttonH, baseX, y});
+                std::shared_ptr<IRect> gameRect = _display->createRect({{buttonW, buttonH}, {baseX, y}});
                 gameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 gameRect->setText(_loaderGame.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 gameRect->setPosition({baseX, y});
@@ -229,36 +242,125 @@ namespace arcade {
         return selectedGraphic;
     }
 
+    bool Core::userName()
+    {
+        if (!_name.empty())
+            return true;
+        _name.clear();
+        _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
+        Size window = _display->getWindowSize();
+        size_t boxW = std::max<size_t>(24, window.w / 2);
+        size_t boxH = std::max<size_t>(3, window.h / 12);
+        size_t stepY = std::max<size_t>(2, boxH + 1);
+        size_t blockH = (boxH * 3) + (stepY - boxH) * 2;
+        size_t baseX = (window.w > boxW) ? (window.w - boxW) / 2 : 0;
+        size_t startY = (window.h > blockH) ? (window.h - blockH) / 2 : 0;
+        std::shared_ptr<IRect> input = _display->createRect({{boxW, boxH}, {baseX, startY + stepY}});
+        input->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+        input->setText("ENTER YOUR NAME: ", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        input->setPosition({baseX, startY});
+        std::shared_ptr<IRect> confirm = _display->createRect({{boxW, boxH}, {baseX, startY + (stepY * 2)}});
+        confirm->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+        confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        confirm->setPosition({baseX, startY + boxH});
+        bool selecting = true;
+        while (selecting) {
+            EEvent event = _display->pollEvent();
+            if (event == QUIT || event == ESCAPE)
+                return false;
+            if (event == TAB) {
+                std::string nextGraphic = changeDisplay();
+                if (!nextGraphic.empty()) {
+                    input.reset();
+                    confirm.reset();
+                    loadGraphic(nextGraphic);
+                    _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
+                    window = _display->getWindowSize();
+                    boxW = std::max<size_t>(24, window.w / 2);
+                    boxH = std::max<size_t>(3, window.h / 12);
+                    stepY = std::max<size_t>(2, boxH + 1);
+                    blockH = (boxH * 3) + (stepY - boxH) * 2;
+                    baseX = (window.w > boxW) ? (window.w - boxW) / 2 : 0;
+                    startY = (window.h > blockH) ? (window.h - blockH) / 2 : 0;
+                    input = _display->createRect({{boxW, boxH}, {baseX, startY + stepY}});
+                    input->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                    input->setPosition({baseX, startY});
+                    confirm = _display->createRect({{boxW, boxH}, {baseX, startY + (stepY * 2)}});
+                    confirm->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                    confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                    confirm->setPosition({baseX, startY + boxH});
+                }
+                continue;
+            }
+            if (event == BACKSPACE && !_name.empty())
+                _name.pop_back();
+            char typedCharacter = eventToChar(event);
+            if (typedCharacter != '\0' && _name.size() < 12)
+                _name.push_back(typedCharacter);
+            if (event == ENTER) {
+                if (_name.empty())
+                    _name = "PLAYER";
+                selecting = false;
+            }
+            input->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+            _display->clearWindow();
+            input->display();
+            confirm->display();
+            _display->render();
+        }
+        return true;
+    }
+
+    void Core::displayScore()
+    {
+        std::cout << "display score" << std::endl;
+    }
+
     void Core::run(const std::string &lib)
     {
         _libs = initLibList(lib);
         loadGraphic(lib);
+        if (!userName()) {
+            _display->stop();
+            _display.reset();
+            _loaderGraphic.close(_handleGraphic);
+            _handleGraphic = nullptr;
+            return;
+        }
         Size window = _display->getWindowSize();
         size_t buttonW = std::max<size_t>(18, window.w / 4);
         size_t buttonH = std::max<size_t>(3, window.h / 12);
         size_t centerX = window.w / 2;
-        size_t centerY = window.h / 2;
         size_t baseX = (centerX > (buttonW / 2)) ? centerX - (buttonW / 2) : 0;
-        size_t firstY = (centerY > (buttonH * 2)) ? centerY - (buttonH * 2) : 0;
         size_t stepY = std::max<size_t>(2, buttonH + 1);
+        size_t menuHeight = (buttonH * 5) + ((stepY - buttonH) * 4);
+        size_t firstY = (window.h > menuHeight) ? (window.h - menuHeight) / 2 : 0;
 
-        std::shared_ptr<IRect> playButton = _display->createRect({buttonW, buttonH, baseX, firstY});
+        std::shared_ptr<IRect> playButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY}});
         playButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         playButton->setText("PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         playButton->setPosition({baseX, firstY});
-        std::shared_ptr<IRect> changeLibButton = _display->createRect({buttonW, buttonH, baseX, firstY + stepY});
+        std::shared_ptr<IRect> changeLibButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY + stepY}});
         changeLibButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         changeLibButton->setText("LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         changeLibButton->setPosition({baseX, firstY + stepY});
-        std::shared_ptr<IRect> exit = _display->createRect({buttonW, buttonH, baseX, firstY + (stepY * 2)});
+        std::shared_ptr<IRect> exit = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 2)}});
         exit->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         exit->setText("EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         exit->setPosition({baseX, firstY + (stepY * 2)});
+        std::shared_ptr<IRect> scores = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
+        scores->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+        scores->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        scores->setPosition({baseX, firstY + (stepY * 3)});
+        std::shared_ptr<IRect> nameField = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
+        nameField->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+        nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        nameField->setPosition({baseX, firstY + (stepY * 4)});
         _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
-        std::shared_ptr<IRect> selector = _display->createRect({std::max<size_t>(2, buttonW / 8), buttonH, 0, 0});
+        std::shared_ptr<IRect> selector = _display->createRect({{std::max<size_t>(2, buttonW / 8), buttonH}, {0, 0}});
         selector->setTexture({"./assets/selector.png", 255, 255, 255, 255});
         size_t selectorX = (baseX > std::max<size_t>(2, buttonW / 8) + 1) ? baseX - (std::max<size_t>(2, buttonW / 8) + 1) : 0;
-        std::vector<Position> positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}};
+        std::vector<Position> positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}, {selectorX, firstY + (stepY * 3)}, {selectorX, firstY + (stepY * 4)}};
         int selected = 0;
         selector->setPosition(positions.at(selected));
         bool running = true;
@@ -282,6 +384,14 @@ namespace arcade {
                         selectedGraphic = runGames(*selector, running);
                     else if (selected == 1)
                         selectedGraphic = runlib(*selector, running);
+                    else if (selected == 3)
+                        displayScore();
+                    else if (selected == 4) {
+                        std::string previousName = _name;
+                        _name.clear();
+                        if (!userName())
+                            _name = "PLAYER";
+                    }
                     else
                         running = false;
                 }
@@ -293,6 +403,8 @@ namespace arcade {
                     playButton.reset();
                     changeLibButton.reset();
                     exit.reset();
+                    scores.reset();
+                    nameField.reset();
                     selector.reset();
                     loadGraphic(selectedGraphic);
                 }
@@ -300,33 +412,44 @@ namespace arcade {
                 buttonW = std::max<size_t>(18, window.w / 4);
                 buttonH = std::max<size_t>(3, window.h / 12);
                 centerX = window.w / 2;
-                centerY = window.h / 2;
                 baseX = (centerX > (buttonW / 2)) ? centerX - (buttonW / 2) : 0;
-                firstY = (centerY > (buttonH * 2)) ? centerY - (buttonH * 2) : 0;
                 stepY = std::max<size_t>(2, buttonH + 1);
+                menuHeight = (buttonH * 5) + ((stepY - buttonH) * 4);
+                firstY = (window.h > menuHeight) ? (window.h - menuHeight) / 2 : 0;
                 selectorX = (baseX > std::max<size_t>(2, buttonW / 8) + 1) ? baseX - (std::max<size_t>(2, buttonW / 8) + 1) : 0;
-                positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}};
-                playButton = _display->createRect({buttonW, buttonH, baseX, firstY});
+                positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}, {selectorX, firstY + (stepY * 3)}, {selectorX, firstY + (stepY * 4)}};
+                playButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY}});
                 playButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 playButton->setText("PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 playButton->setPosition({baseX, firstY});
-                changeLibButton = _display->createRect({buttonW, buttonH, baseX, firstY + stepY});
+                changeLibButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY + stepY}});
                 changeLibButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 changeLibButton->setText("LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 changeLibButton->setPosition({baseX, firstY + stepY});
-                exit = _display->createRect({buttonW, buttonH, baseX, firstY + (stepY * 2)});
+                exit = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 2)}});
                 exit->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 exit->setText("EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 exit->setPosition({baseX, firstY + (stepY * 2)});
-                selector = _display->createRect({std::max<size_t>(2, buttonW / 8), buttonH, 0, 0});
+                scores = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
+                scores->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                scores->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                scores->setPosition({baseX, firstY + (stepY * 3)});
+                nameField = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 4)}});
+                nameField->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                nameField->setPosition({baseX, firstY + (stepY * 4)});
+                selector = _display->createRect({{std::max<size_t>(2, buttonW / 8), buttonH}, {0, 0}});
                 selector->setTexture({"./assets/selector.png", 255, 255, 255, 255});
                 selector->setPosition(positions.at(selected));
                 _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
             }
+            nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
             _display->clearWindow();
             playButton->display();
             changeLibButton->display();
             exit->display();
+            scores->display();
+            nameField->display();
             selector->display();
             _display->render();
         }
@@ -348,9 +471,9 @@ namespace arcade {
         _type = _loaderGraphic.getType(_handleGraphic);
         if (_type == EType::GRAPHICAL) {
             _display = std::shared_ptr<IDisplayModule>(_loaderGraphic.getInstance(_handleGraphic));
-            _name = _loaderGraphic.getName(_handleGraphic);
+            _graphicName = _loaderGraphic.getName(_handleGraphic);
             _currentGraphicPath = path;
-            _display->init(_name, {1920, 1080});
+            _display->init(_graphicName, {1920, 1080});
         } else
             throw Exception("Error: '" + path + "' not a graphical library");
     }

@@ -13,7 +13,7 @@ namespace arcade {
         public:
             IGameModule() = default;
             virtual ~IGameModule() = default;
-            virtual void run(std::shared_ptr<IDisplayModule> display) = 0;
+            virtual void run(std::shared_ptr<IDisplayModule> display, const std::string name) = 0;
             virtual void pause() = 0;
             virtual bool changeDisplay() = 0;
     };

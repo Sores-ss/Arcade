@@ -11,6 +11,7 @@
 #include <chrono>
 #include <vector>
 #include <array>
+#include <fstream>
 
 #define TILE_SIZE 15
 #define MAP_WIDTH 28
@@ -21,7 +22,7 @@ namespace arcade {
         public:
             Pacman() = default;
             ~Pacman() = default;
-            void run(std::shared_ptr<IDisplayModule> display) override;
+            void run(std::shared_ptr<IDisplayModule> display, const std::string name) override;
             void pause() override;
             bool changeDisplay() override;
         private:

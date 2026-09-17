@@ -347,6 +347,8 @@ namespace arcade {
             if (_event.type == SDL_KEYDOWN) {
                 if (_event.key.keysym.sym == SDLK_ESCAPE)
                     return EEvent::ESCAPE;
+                if (_event.key.keysym.sym == SDLK_BACKSPACE)
+                    return EEvent::BACKSPACE;
                 if (_event.key.keysym.sym == SDLK_DOWN)
                     return EEvent::DOWN;
                 if (_event.key.keysym.sym == SDLK_UP)
@@ -359,6 +361,8 @@ namespace arcade {
                     return EEvent::ENTER;
                 if (_event.key.keysym.sym == SDLK_TAB)
                     return EEvent::TAB;
+                if (_event.key.keysym.sym >= SDLK_a && _event.key.keysym.sym <= SDLK_z)
+                    return static_cast<EEvent>(EEvent::A + (_event.key.keysym.sym - SDLK_a));
             }
         }
         return EEvent::UNDEFINED;

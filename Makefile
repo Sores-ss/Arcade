@@ -17,7 +17,8 @@ SDL_SRC = src/SDL2.cpp
 
 GTK_LIB = lib/arcade_gtk.so
 GTK_SRC = src/GTK.cpp
-GTK_FLAGS = $(shell pkg-config --cflags --libs gtk4 2>/dev/null || pkg-config --cflags --libs gtk+-3.0 2>/dev/null)
+GTK_PKG ?= gtk+-3.0
+GTK_FLAGS = $(shell pkg-config --cflags --libs $(GTK_PKG) 2>/dev/null)
 
 NCURSES_LIB = lib/arcade_ncurses.so
 NCURSES_SRC = src/Ncurses.cpp
