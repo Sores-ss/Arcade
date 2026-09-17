@@ -11,16 +11,19 @@ SRC = 	main.cpp \
 OBJ = $(SRC:.cpp=.o)
 
 NAME = arcade
-GRAPHICAL_LIB = lib/arcade_sdl2.so
-GRAPHICAL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf
-GRAPHICAL_SRC = src/SDL2.cpp
+SDL_LIB = lib/arcade_sdl2.so
+SDL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+SDL_SRC = src/SDL2.cpp
+
+NCURSES_LIB = lib/arcade_ncurses.so
+NCURSES_SRC = src/Ncurses.cpp
 
 SNAKE_LIB = lib/arcade_snake.so
 SNAKE_SRC = src/Snake.cpp
 PACMAN_LIB = lib/arcade_pacman.so
 PACMAN_SRC = src/Pacman.cpp
 
-CXXFLAGS += -Isrc
+CXXFLAGS += -Werror -Wall -Wextra -Isrc
 
 all: core graphicals games
 
@@ -29,11 +32,15 @@ core: $(NAME)
 $(NAME): $(OBJ)
 	g++ -o $(NAME) $(OBJ) $(CXXFLAGS)
 
-graphicals: $(GRAPHICAL_LIB)
+graphicals: $(SDL_LIB) $(NCURSES_LIB)
 
-$(GRAPHICAL_LIB): $(GRAPHICAL_SRC)
+$(NCURSES_LIB): $(NCURSES_SRC)
 	mkdir -p lib
-	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC) $(GRAPHICAL_FLAGS)
+	g++ -shared -fPIC $(CXXFLAGS) -o $(NCURSES_LIB) $(NCURSES_SRC) -lncurses
+
+$(SDL_LIB): $(SDL_SRC)
+	mkdir -p lib
+	g++ -shared -fPIC $(CXXFLAGS) -o $(SDL_LIB) $(SDL_SRC) $(SDL_FLAGS)
 
 games: $(SNAKE_LIB) $(PACMAN_LIB)
 
@@ -48,6 +55,6 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME) $(GRAPHICAL_LIB) $(SNAKE_LIB) $(PACMAN_LIB)
+	rm -f $(NAME) $(SDL_LIB) $(NCURSES_LIB) $(SNAKE_LIB) $(PACMAN_LIB)
 
 re: fclean core graphicals games

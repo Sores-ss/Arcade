@@ -31,14 +31,17 @@ namespace arcade {
     struct Bounds : Size, Position {
     };
 
-    class IRect {
+class IRect {
         public:
             IRect() = default;
             virtual ~IRect() = default;
             virtual Bounds getBounds() const = 0;
             virtual bool isMouseOver() const = 0;
             virtual void setSize(Size size) = 0;
-            virtual void display() const  = 0;
             virtual void setPosition(Position position) = 0;
+            virtual void setText(std::string text, Texture texture) = 0;
+            virtual void setBorder(Texture texture) = 0;
+            virtual void setTexture(Texture texture) = 0;
+            virtual void display() const = 0;
     };
 };
