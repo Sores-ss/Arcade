@@ -8,11 +8,10 @@
 #pragma once
 #include <iostream>
 #include <dlfcn.h>
-#include "IDisplayModule.hpp"
 
 template<typename T>
 class DLLoader {
-    public:
+    public :
         DLLoader() = default;
         ~DLLoader() = default;
         void *open(std::string filepath) {
@@ -36,36 +35,6 @@ class DLLoader {
             }
             T *obj = myEntryPoint();
             return obj;
-        }
-
-        arcade::EType getType(void *handle)
-        {
-            char *error = NULL;
-            dlerror();
-            arcade::EType (*getTypeLib)(void);
-            *(void**)(&getTypeLib) = dlsym(handle, "getLibType");
-            error = dlerror();
-            if (error != NULL) {
-                std::fprintf(stderr, "%s\n", error);
-                std::exit(EXIT_FAILURE);
-            }
-            arcade::EType type = getTypeLib();
-            return type;
-        }
-
-        std::string getName(void *handle)
-        {
-            char *error = NULL;
-            dlerror();
-            std::string (*getNameLib)(void);
-            *(void**)(&getNameLib) = dlsym(handle, "getLibName");
-            error = dlerror();
-            if (error != NULL) {
-                std::fprintf(stderr, "%s\n", error);
-                std::exit(EXIT_FAILURE);
-            }
-            std::string name = getNameLib();
-            return name;
         }
         void close(void *handle) {dlclose(handle);}
 };
