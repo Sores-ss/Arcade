@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include "IDisplayModule.hpp"
+#include "IGameModule.hpp"
 #include "DLLoader.hpp"
 
 namespace arcade {
@@ -21,9 +22,12 @@ namespace arcade {
             void run(const std::string &lib);
         private:
             std::vector<std::string> _libs;
-            DLLoader<IDisplayModule> _loader;
-            void *_handle = nullptr;
+            DLLoader<IDisplayModule> _loaderGraphic;
+            DLLoader<IGameModule> _loaderGame;
+            void *_handleGraphic = nullptr;
+            void *_handleGame = nullptr;
             IDisplayModule *_display = nullptr;
+            IGameModule *_game = nullptr;
             EType _type;
             std::string _name;
             void loadLib(const std::string &path);

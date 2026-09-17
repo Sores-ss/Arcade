@@ -9,11 +9,11 @@
 #include "IDisplayModule.hpp"
 
 namespace arcade {
-    class IGame {
+    class IGameModule {
         public:
-            IGame() = default;
-            virtual ~IGame() = default;
-            virtual void run() = 0;
+            IGameModule() = default;
+            virtual ~IGameModule() = default;
+            virtual void run(IDisplayModule *display) = 0;
             virtual void pause() = 0;
             virtual void stop() = 0;
     };

@@ -33,7 +33,15 @@ namespace arcade {
         IRect *playButton = _display->createRect(200, 100, 300, 250);
         _display->setTexture(playButton, {"./assets/button_texture.png", 180, 180, 180, 255});
         _display->setText(playButton, "PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
-        playButton->setPosition(1920 / 2 - 100, 1080 / 2 - 100);
+        playButton->setPosition(1920 / 2 - 100, 1080 / 2 - 200 );
+        IRect *changeLibButton = _display->createRect(200, 100, 300, 250);
+        _display->setTexture(changeLibButton, {"./assets/button_texture.png", 180, 180, 180, 255});
+        _display->setText(changeLibButton, "LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        changeLibButton->setPosition(1920 / 2 - 100, 1080 / 2 - 50);
+        IRect *exit = _display->createRect(200, 100, 300, 250);
+        _display->setTexture(exit, {"./assets/button_texture.png", 180, 180, 180, 255});
+        _display->setText(exit, "EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        exit->setPosition(1920 / 2 - 100, 1080 / 2 + 100);
         bool running = true;
         while (running) {
             EEvent event = _display->pollEvent();
@@ -41,19 +49,21 @@ namespace arcade {
                 running = false;
             _display->clear();
             _display->displayRect(playButton);
+            _display->displayRect(changeLibButton);
+            _display->displayRect(exit);
             _display->render();
         }
         _display->stop();
-        _loader.close(_handle);
+        _loaderGraphic.close(_handleGraphic);
     }
 
     void Core::loadLib(const std::string &path)
     {
-        _handle = _loader.open(path);
-        _type = _loader.getType(_handle);
+        _handleGraphic = _loaderGraphic.open(path);
+        _type = _loaderGraphic.getType(_handleGraphic);
         if (_type == EType::GRAPHICAL) {
-            _display = _loader.getInstance(_handle);
-            _name = _loader.getName(_handle);
+            _display = _loaderGraphic.getInstance(_handleGraphic);
+            _name = _loaderGraphic.getName(_handleGraphic);
             if (_name == "SDL2")
                 _display->init("SDL2", 1920, 1080);
         } else
