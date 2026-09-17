@@ -26,7 +26,8 @@ namespace arcade {
         RIGHT,
         LEFT,
         ENTER,
-        CLICK
+        CLICK,
+        TAB
     };
 
     class IDisplayModule {

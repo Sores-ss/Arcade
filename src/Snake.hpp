@@ -17,6 +17,7 @@ namespace arcade {
             ~Snake() = default;
             void run(std::shared_ptr<IDisplayModule> display) override;
             void pause() override;
+            bool changeDisplay() override;
         private:
             enum Direction {
                 DIR_UP,
@@ -40,11 +41,13 @@ namespace arcade {
             bool _running = false;
             bool _paused = false;
             bool _gameOver = false;
+            bool _changeDisplay = false;
+            bool _initialized = false;
             int _score = 0;
 
             void initBoard();
             void resetGame();
-            void cleanup();
+            void cleanup(bool resetState);
             void handleInput(EEvent event);
             void updateGame();
             void renderGame();

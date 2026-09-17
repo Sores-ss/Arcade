@@ -344,6 +344,8 @@ namespace arcade {
                     return EEvent::RIGHT;
                 if (_event.key.keysym.sym == SDLK_RETURN)
                     return EEvent::ENTER;
+                if (_event.key.keysym.sym == SDLK_TAB)
+                    return EEvent::TAB;
             }
         }
         return EEvent::UNDEFINED;

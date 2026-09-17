@@ -46,6 +46,13 @@ namespace arcade {
     static const Texture PANEL_TILE = {"", 35, 35, 35, 220};
     static const Texture TEXT_TILE = {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255};
 
+    bool Snake::changeDisplay()
+    {
+        bool change = _changeDisplay;
+        _changeDisplay = false;
+        return change;
+    }
+
     bool Snake::isOpposite(Direction first, Direction second) const
     {
         if (first == DIR_UP && second == DIR_DOWN)
@@ -203,18 +210,22 @@ namespace arcade {
         _nextDirection = DIR_RIGHT;
         _paused = false;
         _gameOver = false;
+        _changeDisplay = false;
         _score = 0;
         spawnFood();
         updateScoreText();
         updateStatusText("RUNNING");
     }
 
-    void Snake::cleanup()
+    void Snake::cleanup(bool resetState)
     {
         _tiles.clear();
         _scoreRect = nullptr;
         _statusRect = nullptr;
-        _snake.clear();
+        if (resetState) {
+            _snake.clear();
+            _initialized = false;
+        }
     }
 
     void Snake::handleInput(EEvent event)
@@ -222,6 +233,11 @@ namespace arcade {
         Direction wanted = _nextDirection;
 
         if (event == EEvent::QUIT || event == EEvent::ESCAPE) {
+            _running = false;
+            return;
+        }
+        if (event == EEvent::TAB) {
+            _changeDisplay = true;
             _running = false;
             return;
         }
@@ -319,10 +335,22 @@ namespace arcade {
         if (display == nullptr)
             return;
         _display = display;
+        _changeDisplay = false;
         std::srand(std::time(nullptr));
         _running = true;
         initBoard();
-        resetGame();
+        if (!_initialized) {
+            resetGame();
+            _initialized = true;
+        } else {
+            updateScoreText();
+            if (_gameOver)
+                updateStatusText("GAME OVER - ENTER");
+            else if (_paused)
+                updateStatusText("PAUSED");
+            else
+                updateStatusText("RUNNING");
+        }
 
         auto lastTick = std::chrono::steady_clock::now();
         const std::chrono::milliseconds tickRate(120);
@@ -341,7 +369,7 @@ namespace arcade {
             _display->render();
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
-        cleanup();
+        cleanup(!_changeDisplay);
         _display = nullptr;
     }
 

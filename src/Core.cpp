@@ -27,15 +27,44 @@ namespace arcade {
         return newMap;
     }
 
-    void Core::loadGame(const std::string &path)
+    std::string Core::loadGame(const std::string &path)
     {
-        _handleGame = _loaderGame.open(path);
-        EType type = _loaderGame.getType(_handleGame);
-        if (type == EType::GAME) {
+        if (_game == nullptr || _currentGamePath != path) {
+            _handleGame = _loaderGame.open(path);
+            EType type = _loaderGame.getType(_handleGame);
+            if (type != EType::GAME)
+                throw Exception("Error: invalid game library : " + path);
             _game = std::unique_ptr<IGameModule>(_loaderGame.getInstance(_handleGame));
-            _game->run(_display);
-        } else
-            throw Exception("Error: invalid game library : " + path);
+            _currentGamePath = path;
+        }
+        _game->run(_display);
+        bool wantsDisplayChange = _game->changeDisplay();
+        if (wantsDisplayChange)
+            return changeDisplay();
+        _game.reset();
+        _loaderGame.close(_handleGame);
+        _handleGame = nullptr;
+        _currentGamePath.clear();
+        return "";
+    }
+
+    std::string Core::changeDisplay()
+    {
+        std::vector<std::string> graphicalLibs;
+
+        for (const auto &lib : _libs) {
+            void *handle = _loaderGraphic.open(lib);
+            if (_loaderGraphic.getType(handle) == EType::GRAPHICAL)
+                graphicalLibs.push_back(lib);
+            _loaderGraphic.close(handle);
+        }
+        if (graphicalLibs.size() < 2)
+            return "";
+        auto current = std::find(graphicalLibs.begin(), graphicalLibs.end(), _currentGraphicPath);
+        if (current == graphicalLibs.end())
+            return graphicalLibs.front();
+        std::size_t nextIndex = ((std::size_t)(std::distance(graphicalLibs.begin(), current)) + 1) % graphicalLibs.size();
+        return graphicalLibs[nextIndex];
     }
 
     std::string Core::runlib(IRect &selector, bool &running)
@@ -98,6 +127,13 @@ namespace arcade {
                 selectedLib = graphicalLibs.at(selected);
                 selecting = false;
             }
+            if (event == EEvent::TAB) {
+                std::string nextGraphic = changeDisplay();
+                if (!nextGraphic.empty()) {
+                    selectedLib = nextGraphic;
+                    selecting = false;
+                }
+            }
             _display->clearWindow();
             for (auto &lib : libList)
                 lib->display();
@@ -109,7 +145,7 @@ namespace arcade {
         return selectedLib;
     }
 
-    void Core::runGames(IRect &selector, bool &running)
+    std::string Core::runGames(IRect &selector, bool &running)
     {
         std::vector<std::shared_ptr<IRect>> gameList;
         std::vector<void *> handles;
@@ -124,6 +160,7 @@ namespace arcade {
         size_t selectorW = std::max<size_t>(2, buttonW / 8);
         size_t selectorX = (baseX > selectorW + 1) ? baseX - (selectorW + 1) : 0;
         std::vector<std::string> gameLibs;
+        std::string selectedGraphic;
 
         for (const auto &lib : _libs) {
             void *handle = _loaderGame.open(lib);
@@ -165,8 +202,21 @@ namespace arcade {
             if (event == EEvent::ENTER && !gameLibs.empty()) {
                 _display->playSound("./assets/8-bit-click.wav");
                 _display->setBackground({"", 50, 50, 50, 255});
-                loadGame(gameLibs.at(selected));
+                std::string selectedGame = gameLibs.at(selected);
+                selectedGraphic = loadGame(selectedGame);
+                while (!selectedGraphic.empty()) {
+                    loadGraphic(selectedGraphic);
+                    _display->setBackground({"", 50, 50, 50, 255});
+                    selectedGraphic = loadGame(selectedGame);
+                }
                 selecting = false;
+            }
+            if (event == EEvent::TAB) {
+                std::string nextGraphic = changeDisplay();
+                if (!nextGraphic.empty()) {
+                    selectedGraphic = nextGraphic;
+                    selecting = false;
+                }
             }
             _display->clearWindow();
             for (auto &game : gameList)
@@ -176,11 +226,7 @@ namespace arcade {
         }
         for (auto &handle : handles)
             _loaderGame.close(handle);
-        if (_game != nullptr) {
-            _game.reset();
-            _loaderGame.close(_handleGame);
-            _handleGame = nullptr;
-        }
+        return selectedGraphic;
     }
 
     void Core::run(const std::string &lib)
@@ -228,20 +274,28 @@ namespace arcade {
                 selected = (selected + 1) % positions.size();
                 selector->setPosition(positions.at(selected));
             }
-            if (event == EEvent::ENTER) {
-                _display->playSound("./assets/8-bit-click.wav");
+            if (event == EEvent::ENTER || event == EEvent::TAB) {
                 std::string selectedGraphic;
-                if (selected == 0)
-                    runGames(*selector, running);
-                else if (selected == 1)
-                    selectedGraphic = runlib(*selector, running);
-                else
-                    running = false;
-                
+                if (event == EEvent::ENTER) {
+                    _display->playSound("./assets/8-bit-click.wav");
+                    if (selected == 0)
+                        selectedGraphic = runGames(*selector, running);
+                    else if (selected == 1)
+                        selectedGraphic = runlib(*selector, running);
+                    else
+                        running = false;
+                }
+                if (event == EEvent::TAB)
+                    selectedGraphic = changeDisplay();
                 if (!running)
                     break;
-                if (!selectedGraphic.empty())
+                if (!selectedGraphic.empty()) {
+                    playButton.reset();
+                    changeLibButton.reset();
+                    exit.reset();
+                    selector.reset();
                     loadGraphic(selectedGraphic);
+                }
                 window = _display->getWindowSize();
                 buttonW = std::max<size_t>(18, window.w / 4);
                 buttonH = std::max<size_t>(3, window.h / 12);
@@ -295,6 +349,7 @@ namespace arcade {
         if (_type == EType::GRAPHICAL) {
             _display = std::shared_ptr<IDisplayModule>(_loaderGraphic.getInstance(_handleGraphic));
             _name = _loaderGraphic.getName(_handleGraphic);
+            _currentGraphicPath = path;
             _display->init(_name, {1920, 1080});
         } else
             throw Exception("Error: '" + path + "' not a graphical library");

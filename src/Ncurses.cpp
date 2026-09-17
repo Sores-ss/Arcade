@@ -228,6 +228,9 @@ namespace arcade {
             case '\n':
                 return ENTER;
                 break;
+            case '\t':
+                return TAB;
+                break;
             case 27:
                 return ESCAPE;
                 break;

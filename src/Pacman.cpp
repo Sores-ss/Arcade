@@ -37,6 +37,13 @@ extern "C" {
 }
 
 namespace arcade {
+    bool Pacman::changeDisplay()
+    {
+        bool change = _changeDisplay;
+        _changeDisplay = false;
+        return change;
+    }
+
     void Pacman::resetGame(std::shared_ptr<IDisplayModule> display)
     {
         _map.clear();
@@ -56,6 +63,7 @@ namespace arcade {
         _nextDirX = 1;
         _nextDirY = 0;
         _paused = false;
+        _changeDisplay = false;
         _state = "RUNNING";
         _pacmanDirection = "./assets/pacman_right.png";
         _initGhostPosition = false;
@@ -67,7 +75,8 @@ namespace arcade {
         _superSonicStart = std::chrono::steady_clock::now();
         loadMap(display);
         displayPacman(display);
-        displayGhosts(display);
+        displayGhosts(display, true);
+        _initialized = true;
     }
 
     int Pacman::handleX(int x) const
@@ -93,6 +102,8 @@ namespace arcade {
         _windowSize = display->getWindowSize();
         if (_windowSize.w < 300)
             _tileSize = 1;
+        else
+            _tileSize = TILE_SIZE;
         if (_windowSize.w < MAP_WIDTH || _windowSize.h < MAP_HEIGHT) {
             throw Exception("Pacman needs at least " + std::to_string(MAP_WIDTH) + "x" +
                 std::to_string(MAP_HEIGHT) + " terminal cells in ncurses");
@@ -281,12 +292,32 @@ namespace arcade {
     void Pacman::run(std::shared_ptr<IDisplayModule> display)
     {
         bool running = true;
-        resetGame(display);
+        _changeDisplay = false;
+        if (!_initialized) {
+            resetGame(display);
+        } else {
+            _map.clear();
+            _gumMap.clear();
+            _rectBase = nullptr;
+            _rectScore = nullptr;
+            _rectWord = nullptr;
+            _pacman = nullptr;
+            for (auto &ghost : _ghosts)
+                ghost.rect = nullptr;
+            loadMap(display);
+            displayPacman(display);
+            displayGhosts(display, false);
+        }
         while (running) {
             auto now = std::chrono::steady_clock::now();
             EEvent event = display->pollEvent();
             if (event == QUIT || event == ESCAPE)
                 running = false;
+            if (event == TAB) {
+                _changeDisplay = true;
+                running = false;
+                continue;
+            }
             if (event == ENTER && (_state == "GAME OVER" || _state == "VICTORY")) {
                 resetGame(display);
                 continue;
@@ -312,26 +343,34 @@ namespace arcade {
         }
     }
 
-    void Pacman::displayGhosts(std::shared_ptr<IDisplayModule> display)
+    void Pacman::displayGhosts(std::shared_ptr<IDisplayModule> display, bool resetState)
     {
         std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
         auto now = std::chrono::steady_clock::now();
 
         for (int i = 0; i < 4; i++) {
-            _ghosts[i].x = _startPositions[i].first;
-            _ghosts[i].y = _startPositions[i].second;
-            _ghosts[i].inCage = true;
-            _ghosts[i].cageReleaseTime = now + std::chrono::seconds(10);
-            _ghosts[i].texture = textures[i];
-            _ghosts[i].dirX = 0;
-            _ghosts[i].dirY = -1;
+            if (resetState) {
+                _ghosts[i].x = _startPositions[i].first;
+                _ghosts[i].y = _startPositions[i].second;
+                _ghosts[i].inCage = true;
+                _ghosts[i].cageReleaseTime = now + std::chrono::seconds(10);
+                _ghosts[i].texture = textures[i];
+                _ghosts[i].dirX = 0;
+                _ghosts[i].dirY = -1;
+            } else if (_ghosts[i].texture.empty()) {
+                _ghosts[i].texture = textures[i];
+            }
             _ghosts[i].rect = display->createRect({_tileSize, _tileSize, _rectBounds.x + _ghosts[i].x * _tileSize, _rectBounds.y + _ghosts[i].y * _tileSize});
             if (_ghosts[i].rect) {
-                _ghosts[i].rect->setTexture({textures[i], 255, 255, 255, 0});
+                if (_superSonic)
+                    _ghosts[i].rect->setTexture({"./assets/blue_eat_pacman.png", 255, 255, 255, 0});
+                else
+                    _ghosts[i].rect->setTexture({_ghosts[i].texture, 255, 255, 255, 0});
                 _map.push_back({_ghosts[i].rect, true});
             }
         }
-        _ghostCageStart = now;
+        if (resetState)
+            _ghostCageStart = now;
     }
 
     bool Pacman::isWalkableTile(int x, int y) const

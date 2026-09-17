@@ -23,6 +23,7 @@ namespace arcade {
             ~Pacman() = default;
             void run(std::shared_ptr<IDisplayModule> display) override;
             void pause() override;
+            bool changeDisplay() override;
         private:
             int _score = 0;
             size_t _pacmanStartX = 13;
@@ -33,7 +34,7 @@ namespace arcade {
             void movePacman();
             int handleX(int x) const;
             int handleY(int y) const;
-            void displayGhosts(std::shared_ptr<IDisplayModule> display);
+            void displayGhosts(std::shared_ptr<IDisplayModule> display, bool resetState = true);
             void moveGhosts();
             bool isWalkableTile(int x, int y) const;
             bool canGhostMoveTo(size_t ghostIndex, int x, int y) const;
@@ -93,6 +94,8 @@ namespace arcade {
             std::vector<std::string> map;
             std::vector<std::vector<std::shared_ptr<IRect>>> _gumMap;
             bool _paused = false;
+            bool _changeDisplay = false;
+            bool _initialized = false;
             std::string _state = "RUNNING";
             std::string _pacmanDirection = "./assets/pacman_right.png";
             void changePacman();
