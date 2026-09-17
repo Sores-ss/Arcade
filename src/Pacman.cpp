@@ -115,19 +115,19 @@ namespace arcade {
 
     void Pacman::updateDirection(EEvent event)
     {
-        if (event == EEvent::UP) {
+        if (event == UP) {
             _dirX = 0;
             _dirY = -1;
         }
-        if (event == EEvent::DOWN) {
+        if (event == DOWN) {
             _dirX = 0;
             _dirY = 1;
         }
-        if (event == EEvent::LEFT) {
+        if (event == LEFT) {
             _dirX = -1;
             _dirY = 0;
         }
-        if (event == EEvent::RIGHT) {
+        if (event == RIGHT) {
             _dirX = 1;
             _dirY = 0;
         }
@@ -182,18 +182,24 @@ namespace arcade {
 
     void Pacman::run(IDisplayModule *display)
     {
-        bool running = true;
+        auto start = std::chrono::steady_clock::now();
+        auto last = start;
 
+        _running = true;
         loadMap(display);
         displayPacman(display);
-        while (running) {
+        displayGhosts(display);
+        while (_running) {
+            auto now = std::chrono::steady_clock::now();
             EEvent event = display->pollEvent();
-            if (event == EEvent::QUIT || event == EEvent::ESCAPE)
-                running = false;
+            if (event == QUIT || event == ESCAPE)
+                _running = false;
             updateDirection(event);
             if (!_paused) {
                 changePacman();
                 movePacman();
+                if (std::chrono::duration_cast<std::chrono::seconds>(now - last).count() >= 10)
+                    moveGhosts(display);
             }
             std::string scoreValue = std::to_string(_score);
             _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
@@ -209,6 +215,123 @@ namespace arcade {
         }
     }
 
+    void Pacman::displayGhosts(IDisplayModule *display)
+    {
+        std::array<std::pair<int,int>, 4> startPositions = {{{12, 14}, {13, 14}, {14, 14}, {15, 14}}};
+        std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
+
+        for (int i = 0; i < 4; i++) {
+            _ghosts[i].x = startPositions[i].first;
+            _ghosts[i].y = startPositions[i].second;
+            _ghosts[i].inCage = true;
+            _ghosts[i].texture = textures[i];
+            _ghosts[i].dirX = 0;
+            _ghosts[i].dirY = -1;
+            _ghosts[i].rect = display->createRect({TILE_SIZE, TILE_SIZE, _rectBounds.x + _ghosts[i].x * TILE_SIZE, _rectBounds.y + _ghosts[i].y * TILE_SIZE});
+            if (_ghosts[i].rect) {
+                _ghosts[i].rect->setTexture({textures[i], 255, 255, 255, 0});
+                _map.push_back({_ghosts[i].rect, true});
+            }
+        }
+        _ghostCageStart = std::chrono::steady_clock::now();
+    }
+
+    bool Pacman::isWalkableTile(int x, int y) const
+    {
+        if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT)
+            return false;
+        return map[y][x] != '#';
+    }
+
+    bool Pacman::isInCage(int x, int y) const
+    {
+        return (x >= _cageLeft && x <= _cageRight && y >= _cageTop && y <= _cageBottom);
+    }
+
+    bool Pacman::canGhostMoveTo(size_t ghostIndex, int x, int y) const
+    {
+        if (!isWalkableTile(x, y))
+            return false;
+        if (_ghosts[ghostIndex].inCage) {
+            bool isCageTile = isInCage(x, y);
+            bool isExitTile = (y == 12 && x >= 13 && x <= 14);
+            if (!isCageTile && !isExitTile)
+                return false;
+        }
+        return true;
+    }
+
+    void Pacman::moveGhosts(IDisplayModule *display)
+    {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsedMove = std::chrono::duration_cast<std::chrono::milliseconds>(now - _ghostLastMove);
+        std::array<std::pair<int,int>, 4> movePositions = {{{14, 12}, {10, 15}, {18, 14}, {14, 18}}};
+
+        if (elapsedMove.count() < 200)
+            return;
+        _ghostLastMove = now;
+        if (!_initGhostPosition) {
+            for (int i = 0; i < 4; i++) {
+                _ghosts[i].x = movePositions[i].first;
+                _ghosts[i].y = movePositions[i].second;
+                _ghosts[i].inCage = false;
+            }
+            _initGhostPosition = true;
+        }
+        const std::array<std::pair<int,int>, 4> dirs = {{{0, -1}, {1, 0}, {-1, 0}, {0, 1}}};
+        for (size_t i = 0; i < _ghosts.size(); i++) {
+            Ghost &ghost = _ghosts[i];
+            int nextX = ghost.x + ghost.dirX;
+            int nextY = ghost.y + ghost.dirY;
+            if (canGhostMoveTo(i, nextX, nextY)) {
+                if (!ghost.inCage && std::rand() % 10 == 0) {
+                    std::vector<std::pair<int,int>> validDirs;
+                    for (auto &dir : dirs) {
+                        if (dir.first == -ghost.dirX && dir.second == -ghost.dirY)
+                            continue;
+                        if (canGhostMoveTo(i, ghost.x + dir.first, ghost.y + dir.second))
+                            validDirs.push_back(dir);
+                    }
+                    if (!validDirs.empty()) {
+                        auto chosen = validDirs[std::rand() % validDirs.size()];
+                        ghost.dirX = chosen.first;
+                        ghost.dirY = chosen.second;
+                        nextX = ghost.x + ghost.dirX;
+                        nextY = ghost.y + ghost.dirY;
+                    }
+                }
+                ghost.x = nextX;
+                ghost.y = nextY;
+            } else {
+                std::vector<std::pair<int,int>> validDirs;
+                for (auto &dir : dirs) {
+                    if (dir.first == -ghost.dirX && dir.second == -ghost.dirY)
+                        continue;
+                    if (canGhostMoveTo(i, ghost.x + dir.first, ghost.y + dir.second))
+                        validDirs.push_back(dir);
+                }
+                if (!validDirs.empty()) {
+                    auto chosen = validDirs[std::rand() % validDirs.size()];
+                    ghost.dirX = chosen.first;
+                    ghost.dirY = chosen.second;
+                    ghost.x += ghost.dirX;
+                    ghost.y += ghost.dirY;
+                }
+            }
+            ghost.rect->setPosition({
+                _rectBounds.x + ghost.x * TILE_SIZE,
+                _rectBounds.y + ghost.y * TILE_SIZE
+            });
+            if (ghost.x == (int)_pacmanStartX && ghost.y == (int)_pacmanStartY) {
+                _state = "GAME OVER";
+                _paused = true;
+                EEvent event = display->pollEvent();
+                if (event == ENTER)
+                    run(display);
+            }
+        }
+    }
+
     void Pacman::pause()
     {
         _paused = !_paused;
@@ -216,11 +339,11 @@ namespace arcade {
             _state = "PAUSED";
         else
             _state = "RUNNING";
-        std::cout << "pacman paused" << std::endl;
     }
 
     void Pacman::stop()
     {
-        std::cout << "pacman stopped" << std::endl;
+        _running = false;
+        std::cout << "Pacman stopped" << std::endl;
     }
 }

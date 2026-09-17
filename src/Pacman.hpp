@@ -10,6 +10,7 @@
 #include "IGameModule.hpp"
 #include <chrono>
 #include <vector>
+#include <array>
 
 #define TILE_SIZE 15
 #define MAP_WIDTH 28
@@ -31,6 +32,11 @@ namespace arcade {
             void displayPacman(IDisplayModule *display);
             void updateDirection(EEvent event);
             void movePacman();
+            void displayGhosts(IDisplayModule *display);
+            void moveGhosts(IDisplayModule *display);
+            bool isWalkableTile(int x, int y) const;
+            bool canGhostMoveTo(size_t ghostIndex, int x, int y) const;
+            bool isInCage(int x, int y) const;
             IRect *_rectBase;
             IRect *_rectScore;
             IRect *_rectWord;
@@ -45,6 +51,8 @@ namespace arcade {
             int _dirX = 1;
             int _dirY = 0;
             std::chrono::steady_clock::time_point _lastMove = std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point _ghostLastMove = std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point _ghostCageStart = std::chrono::steady_clock::now();
             std::vector<std::string> map = {
                 "############################",
                 "#............##.......0....#",
@@ -83,5 +91,22 @@ namespace arcade {
             std::string _state = "RUNNING";
             std::string _pacmanDirection = "./assets/pacman_right.png";
             void changePacman();
+            struct Ghost {
+                IRect *rect = nullptr;
+                int x = 0;
+                int y = 0;
+                int dirX = 1;
+                int dirY = 0;
+                bool inCage = true;
+                std::string texture;
+            };
+            std::array<Ghost, 4> _ghosts;
+            int _cageLeft = 10;
+            int _cageRight = 18;
+            int _cageTop = 13;
+            int _cageBottom = 17;
+            int _cageExitX = 13;
+            bool _initGhostPosition = false;
+            bool _running = false;
     };
 }
