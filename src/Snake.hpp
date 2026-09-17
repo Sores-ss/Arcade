@@ -26,9 +26,9 @@ namespace arcade {
                 DIR_RIGHT
             };
 
-            static const std::size_t _mapWidth = 20;
-            static const std::size_t _mapHeight = 20;
-            static const std::size_t _cellSize = 32;
+            static constexpr std::size_t _mapWidth = 20;
+            static constexpr std::size_t _mapHeight = 20;
+            static constexpr std::size_t _cellSize = 32;
 
             std::vector<IRect *> _tiles;
             std::vector<Size> _snake;

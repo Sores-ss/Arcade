@@ -23,21 +23,22 @@ namespace arcade {
             class ncursesRect : public IRect {
                 protected:
                     Bounds _bounds;
-                    WINDOW *_win;
+                    WINDOW *_win = nullptr;
                     int &_colors_id;
                     int &_pairs_id;
                     MEVENT &_event;
                     std::string _text = "";
                     bool _hasBkdg = false;
                     bool _hasBorder = false;
-                    int _borderColor_id;
-                    int _borderPair_id;
-                    int _textColor_id;
-                    int _pair_id;
-                    int _color_id;
+                    int _borderColor_id = COLOR_WHITE;
+                    int _borderPair_id = 0;
+                    int _textColor_id = COLOR_WHITE;
+                    int _textPair_id = 0;
+                    int _pair_id = 0;
+                    int _color_id = -1;
                 public:
                     ncursesRect(int &colors_id, int &pairs_id, MEVENT &event) : _colors_id(colors_id), _pairs_id(pairs_id), _event(event){};
-                    ~ncursesRect() {delwin(_win);};
+                    ~ncursesRect() {if (_win != nullptr) delwin(_win);};
                     void setWin(WINDOW *win) {_win = win;}
                     Bounds getBounds() const override;
                     bool isMouseOver() const override;
@@ -50,6 +51,8 @@ namespace arcade {
             };
             Ncurses() = default;
             ~Ncurses() = default;
+            static short textureToColor(const arcade::Texture &texture);
+            static int pairFor(int fg, int bg);
             void init(std::string name, Size size) override;
             void stop() override;
             void setBackground(Texture texture) override;

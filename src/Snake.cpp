@@ -14,18 +14,15 @@
 
 __attribute__((constructor)) void create(void)
 {
-    std::cout << "Opening snake..." << std::endl;
 }
 
 __attribute__((destructor)) void destroy(void)
 {
-    std::cout << "Closing snake..." << std::endl;
 }
 
 extern "C" {
     arcade::Snake *myEntryPoint(void)
     {
-        std::cout << "Loading snake.." << std::endl;
         return new arcade::Snake();
     }
 
@@ -119,20 +116,75 @@ namespace arcade {
     void Snake::initBoard()
     {
         Size windowSize = _display->getWindowSize();
-        std::size_t gridWidth = _mapWidth * _cellSize;
-        std::size_t gridHeight = _mapHeight * _cellSize;
-        std::size_t mapX = (windowSize.w - gridWidth) / 2;
-        std::size_t mapY = (windowSize.h - gridHeight) / 2;
+        bool terminalMode = (windowSize.w <= 200 && windowSize.h <= 100);
+        std::size_t cellSize = _cellSize;
+        std::size_t gridWidth = 0;
+        std::size_t gridHeight = 0;
+        std::size_t mapX = 0;
+        std::size_t mapY = 0;
+        std::size_t scoreWidth = 260;
+        std::size_t scoreHeight = 65;
+        std::size_t scoreX = 0;
+        std::size_t scoreY = 0;
+        std::size_t statusWidth = 360;
+        std::size_t statusHeight = 65;
+        std::size_t statusX = 0;
+        std::size_t statusY = 0;
+
+        if (terminalMode) {
+            std::size_t panelHeight = 3;
+            std::size_t topMargin = 1;
+            std::size_t freeHeight = windowSize.h;
+
+            if (freeHeight > panelHeight + topMargin)
+                freeHeight -= panelHeight + topMargin;
+
+            std::size_t cellFromWidth = windowSize.w / _mapWidth;
+            std::size_t cellFromHeight = freeHeight / _mapHeight;
+            cellSize = std::min(_cellSize, std::min(cellFromWidth, cellFromHeight));
+            if (cellSize == 0)
+                cellSize = 1;
+
+            gridWidth = _mapWidth * cellSize;
+            gridHeight = _mapHeight * cellSize;
+            mapX = (windowSize.w > gridWidth) ? (windowSize.w - gridWidth) / 2 : 0;
+            mapY = (windowSize.h > gridHeight) ? (windowSize.h - gridHeight) / 2 : 0;
+
+            scoreWidth = std::min<std::size_t>(26, windowSize.w);
+            scoreHeight = panelHeight;
+            scoreX = mapX;
+            scoreY = (mapY > panelHeight + topMargin) ? (mapY - panelHeight - topMargin) : 0;
+
+            statusWidth = std::min<std::size_t>(36, windowSize.w);
+            statusHeight = panelHeight;
+            statusX = (windowSize.w > statusWidth) ? (windowSize.w - statusWidth) : 0;
+            statusY = scoreY;
+        } else {
+            gridWidth = _mapWidth * cellSize;
+            gridHeight = _mapHeight * cellSize;
+            mapX = (windowSize.w > gridWidth) ? (windowSize.w - gridWidth) / 2 : 0;
+            mapY = (windowSize.h > gridHeight) ? (windowSize.h - gridHeight) / 2 : 0;
+
+            scoreWidth = std::min<std::size_t>(260, windowSize.w);
+            scoreHeight = std::min<std::size_t>(65, windowSize.h);
+            scoreX = mapX;
+            scoreY = (mapY > 90) ? (mapY - 90) : 0;
+
+            statusWidth = std::min<std::size_t>(360, windowSize.w);
+            statusHeight = std::min<std::size_t>(65, windowSize.h);
+            statusX = (mapX + gridWidth > statusWidth) ? (mapX + gridWidth - statusWidth) : 0;
+            statusY = scoreY;
+        }
 
         for (std::size_t y = 0; y < _mapHeight; ++y) {
             for (std::size_t x = 0; x < _mapWidth; ++x) {
-                IRect *tile = _display->createRect({_cellSize, _cellSize,
-                    mapX + x * _cellSize, mapY + y * _cellSize});
+                IRect *tile = _display->createRect({cellSize, cellSize,
+                    mapX + x * cellSize, mapY + y * cellSize});
                 _tiles.push_back(tile);
             }
         }
-        _scoreRect = _display->createRect({260, 65, mapX, mapY - 90});
-        _statusRect = _display->createRect({360, 65, mapX + gridWidth - 360, mapY - 90});
+        _scoreRect = _display->createRect({scoreWidth, scoreHeight, scoreX, scoreY});
+        _statusRect = _display->createRect({statusWidth, statusHeight, statusX, statusY});
         _scoreRect->setTexture(PANEL_TILE);
         _statusRect->setTexture(PANEL_TILE);
         updateStatusText("RUNNING");

@@ -24,172 +24,58 @@ extern "C" {
         return new arcade::Pacman();
     }
 
-    arcade::EType getLibType(void)
+    const arcade::EType getLibType(void)
     {
         return arcade::EType::GAME;
     }
 
-    std::string getLibName(void)
+    const std::string getLibName(void)
     {
         return "Pacman";
     }
 }
 
 namespace arcade {
-    void Pacman::loadMap(IDisplayModule *display)
-    {
-        _windowSize = display->getWindowSize();
-        _rectBounds = {455, 500, 0, 0};
-        _rectBounds.x = (_windowSize.w - _rectBounds.w) / 2 + 20;
-        _rectBounds.y = (_windowSize.h - _rectBounds.h) / 2 - 50;
-        Bounds scoreBounds = {150, 50, _rectBounds.x, 0};
-        scoreBounds.y = (_rectBounds.y > scoreBounds.h + 20) ? _rectBounds.y - scoreBounds.h - 20 : 20;
-        _rectBase = display->createRect(_rectBounds);
-        _rectScore = display->createRect(scoreBounds);
-        _gumMap.resize(MAP_HEIGHT, std::vector<IRect *>(MAP_WIDTH, nullptr));
-        for (size_t i = 0; i < map.size(); i++) {
-            for (size_t j = 0; j < map[i].size(); j++) {
-                if (map[i][j] == '#') {
-                    bool top = (i == 0 || map[i - 1][j] != '#');
-                    bool bot = (i + 1 >= map.size() || map[i + 1][j] != '#');
-                    bool left = (j == 0 || map[i][j - 1] != '#');
-                    bool right = (j + 1 >= map[i].size() || map[i][j + 1] != '#');
-                    if (top) {
-                        IRect *topBorder = display->createRect({15, 2, _rectBounds.x + j * 15, _rectBounds.y + i * 15});
-                        topBorder->setTexture({"", 21, 1, 87, 0});
-                        _map.push_back({topBorder, true});
-                    }
-                    if (bot) {
-                        IRect *bottomBorder = display->createRect({15, 2, _rectBounds.x + j * 15, _rectBounds.y + i * 15 + 15 - 2});
-                        bottomBorder->setTexture({"", 21, 1, 87, 0});
-                        _map.push_back({bottomBorder, true});
-                    }
-                    if (left) {
-                        IRect *leftBorder = display->createRect({2, 15, _rectBounds.x + j * 15, _rectBounds.y + i * 15});
-                        leftBorder->setTexture({"", 21, 1, 87, 0});
-                        _map.push_back({leftBorder, true});
-                    }
-                    if (right) {
-                        IRect *rightBorder = display->createRect({2, 15, _rectBounds.x + j * 15 + 15 - 2, _rectBounds.y + i * 15});
-                        rightBorder->setTexture({"", 21, 1, 87, 0});
-                        _map.push_back({rightBorder, true});
-                    }
-                }
-                if (map[i][j] == '0') {
-                    IRect *bigGum = display->createRect({15, 15, _rectBounds.x + j * 15, _rectBounds.y + i * 15});
-                    bigGum->setTexture({"./assets/pacgum.png", 224, 213, 0, 0});
-                    _gumMap[i][j] = bigGum;
-                    _map.push_back({bigGum, true});
-                }
-                if (map[i][j] == '.') {
-                    IRect *gum = display->createRect({6, 6, _rectBounds.x + j * 15 + 4, _rectBounds.y + i * 15 + 4});
-                    gum->setTexture({"./assets/pacgum.png", 224, 213, 0, 0});
-                    _gumMap[i][j] = gum;
-                    _map.push_back({gum, true});
-                }
-            }
-        }
-        display->setBackground({"./assets/pacman_background.jpg", 0, 0, 0, 0});
-        _rectBase->setTexture({"", 0, 0, 0, 0});
-        _rectScore->setTexture({"", 0, 0, 0, 0});
-        std::string scoreValue = std::to_string(_score);
-        _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
-    }
-
-    void Pacman::displayPacman(IDisplayModule *display)
-    {
-        _pacman = display->createRect({TILE_SIZE, TILE_SIZE,
-            _rectBounds.x + _pacmanStartX * TILE_SIZE,
-            _rectBounds.y + _pacmanStartY * TILE_SIZE});
-        if (!_pacman)
-            return;
-        _lastMove = std::chrono::steady_clock::now();
-        _pacman->setTexture({"./assets/pacman.png", 240, 228, 0, 0});
-        _map.push_back({_pacman, true});
-    }
-
-    void Pacman::updateDirection(EEvent event)
-    {
-        if (event == EEvent::UP) {
-            _dirX = 0;
-            _dirY = -1;
-        }
-        if (event == EEvent::DOWN) {
-            _dirX = 0;
-            _dirY = 1;
-        }
-        if (event == EEvent::LEFT) {
-            _dirX = -1;
-            _dirY = 0;
-        }
-        if (event == EEvent::RIGHT) {
-            _dirX = 1;
-            _dirY = 0;
-        }
-        if (event == ENTER)
-            pause();
-    }
-
-    void Pacman::movePacman()
-    {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastMove);
-        int nextX = _pacmanStartX + _dirX;
-        int nextY = _pacmanStartY + _dirY;
-
-        if (elapsed.count() < 120)
-            return;
-        _lastMove = now;
-        if (nextX < 0 || nextY < 0 || nextX >= MAP_WIDTH || nextY >= MAP_HEIGHT)
-            return;
-        if (map[nextY][nextX] != '#') {
-            _pacmanStartX = nextX;
-            _pacmanStartY = nextY;
-        }
-        _pacman->setPosition({_rectBounds.x + _pacmanStartX * TILE_SIZE, _rectBounds.y + _pacmanStartY * TILE_SIZE});
-        if (map[_pacmanStartY][_pacmanStartX] == '.') {
-            IRect *gum = _gumMap[_pacmanStartY][_pacmanStartX];
-            if (gum) {
-                for (auto &tile : _map)
-                    if (tile.rect == gum){
-                        tile.visible = false;
-                        break;
-                    }
-            }
-            _gumMap[_pacmanStartY][_pacmanStartX] = nullptr;
-            map[_pacmanStartY][_pacmanStartX] = ' ';
-            _score += 10;
-        }
-    }
-
     void Pacman::run(IDisplayModule *display)
     {
+        const std::size_t rectSize = 50;
+        const std::size_t mapWidth = 10;
+        const std::size_t mapHeight = 10;
+        Size windowSize = display->getWindowSize();
+        const std::size_t gridWidth = mapWidth * rectSize;
+        const std::size_t gridHeight = mapHeight * rectSize;
+        const std::size_t mapX = (windowSize.w - gridWidth) / 2;
+        const std::size_t mapY = (windowSize.h - gridHeight) / 2;
+        bool mapInit = false;
         bool running = true;
 
-        loadMap(display);
-        displayPacman(display);
+        if (!mapInit) {
+            for (std::size_t i = 0; i < mapHeight; i++) {
+                for (std::size_t j = 0; j < mapWidth; j++) {
+                    IRect *tile = display->createRect({rectSize, rectSize, mapX + i * rectSize,
+                        mapY + j * rectSize});
+                    if ((i + j) % 2 == 0)
+                        display->setTexture(*tile, {"", 10, 150, 40, 255});
+                    else
+                        display->setTexture(*tile, {"", 35, 180, 55, 255});
+                    _tiles.push_back(tile);
+                }
+            }
+            mapInit = true;
+        }
         while (running) {
             EEvent event = display->pollEvent();
             if (event == EEvent::QUIT || event == EEvent::ESCAPE)
                 running = false;
-            updateDirection(event);
-            if (!_paused)
-                movePacman();
-            std::string scoreValue = std::to_string(_score);
-            _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
             display->clearWindow();
-            _rectBase->display();
-            for (auto &mapRect : _map)
-                if (mapRect.visible)
-                    mapRect.rect->display();
-            _rectScore->display();
+            for (IRect *tile : _tiles)
+                display->displayRect(*tile);
             display->render();
         }
     }
 
     void Pacman::pause()
     {
-        _paused = !_paused;
         std::cout << "pacman paused" << std::endl;
     }
 

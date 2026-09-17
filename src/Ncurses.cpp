@@ -7,27 +7,7 @@
 
 #include "Ncurses.hpp"
 #include "Exception.hpp"
-
-namespace {
-    short textureToColor(const arcade::Texture &texture)
-    {
-        if (texture.r > 220 && texture.g > 220 && texture.b > 220)
-            return COLOR_WHITE;
-        if (texture.r > 220 && texture.g > 220)
-            return COLOR_YELLOW;
-        if (texture.r > 220 && texture.b > 220)
-            return COLOR_MAGENTA;
-        if (texture.g > 220 && texture.b > 220)
-            return COLOR_CYAN;
-        if (texture.r > texture.g && texture.r > texture.b)
-            return COLOR_RED;
-        if (texture.g > texture.r && texture.g > texture.b)
-            return COLOR_GREEN;
-        if (texture.b > texture.r && texture.b > texture.g)
-            return COLOR_BLUE;
-        return COLOR_BLACK;
-    }
-}
+#include <algorithm>
 
 __attribute__((constructor)) void create(void)
 {
@@ -58,6 +38,35 @@ extern "C" {
 }
 
 namespace arcade {
+    short Ncurses::textureToColor(const arcade::Texture &texture)
+    {
+        if (texture.r > 220 && texture.g > 220 && texture.b > 220)
+            return COLOR_WHITE;
+        if (texture.r > 220 && texture.g > 220)
+            return COLOR_YELLOW;
+        if (texture.r > 220 && texture.b > 220)
+            return COLOR_MAGENTA;
+        if (texture.g > 220 && texture.b > 220)
+            return COLOR_CYAN;
+        if (texture.r > texture.g && texture.r > texture.b)
+            return COLOR_RED;
+        if (texture.g > texture.r && texture.g > texture.b)
+            return COLOR_GREEN;
+        if (texture.b > texture.r && texture.b > texture.g)
+            return COLOR_BLUE;
+        return COLOR_BLACK;
+    }
+
+    int Ncurses::pairFor(int fg, int bg)
+    {
+        int clampedFg = std::max(0, std::min(fg, 7));
+        int bgIndex = (bg < 0) ? 0 : std::max(1, std::min(bg + 1, 8));
+        int pairId = 1 + clampedFg * 9 + bgIndex;
+
+        init_pair(pairId, clampedFg, (bg < 0) ? -1 : bg);
+        return pairId;
+    }
+    
     void Ncurses::init([[maybe_unused]]std::string name, [[maybe_unused]]Size size) {
         initscr();
         if (has_colors())
@@ -79,14 +88,16 @@ namespace arcade {
 
     void Ncurses::ncursesRect::setBorder(Texture texture)
     {
-        _borderPair_id = _pairs_id;
-        _pairs_id++;
         _borderColor_id = textureToColor(texture);
-        init_pair(_borderPair_id, _borderColor_id, _hasBkdg ? _color_id : -1);
+        _borderPair_id = pairFor(_borderColor_id, _hasBkdg ? _color_id : -1);
         _hasBorder = true;
     }
 
     void Ncurses::stop() {
+        attrset(A_NORMAL);
+        bkgd(' ' | COLOR_PAIR(0));
+        erase();
+        refresh();
         endwin();
     }
 
@@ -109,9 +120,10 @@ namespace arcade {
             wattroff(_win, COLOR_PAIR(_borderPair_id));
         }
         if (_text != "") {
-            wattron(_win, COLOR_PAIR(_pair_id));
+            int textPair = (_textPair_id != 0) ? _textPair_id : _pair_id;
+            wattron(_win, COLOR_PAIR(textPair));
             mvwprintw(_win, 1, 1, "%s", _text.c_str());
-            wattroff(_win, COLOR_PAIR(_pair_id));
+            wattroff(_win, COLOR_PAIR(textPair));
         }
         wnoutrefresh(_win);
     }
@@ -160,37 +172,35 @@ namespace arcade {
     void Ncurses::setBackground(Texture texture)
     {
         _bkdg_color = textureToColor(texture);
-        _bkdg_pair = _pairs_id;
-        _pairs_id++;
-        init_pair(_bkdg_pair, COLOR_WHITE, _bkdg_color);
+        _bkdg_pair = pairFor(COLOR_WHITE, _bkdg_color);
         bkgd(' ' | COLOR_PAIR(_bkdg_pair));
+        erase();
     }
 
     void Ncurses::ncursesRect::setText(std::string text, Texture texture)
     {
         _textColor_id = textureToColor(texture);
-        init_pair(_pair_id, _textColor_id, _color_id);
+        _textPair_id = pairFor(_textColor_id, _hasBkdg ? _color_id : -1);
         _text = text;
     }
 
     void Ncurses::ncursesRect::setTexture(Texture texture)
     {
-        _pair_id = _pairs_id;
-        _pairs_id++;
         _color_id = textureToColor(texture);
-        init_pair(_pair_id, COLOR_BLACK, _color_id);
+        _pair_id = pairFor(COLOR_BLACK, _color_id);
+        if (_text != "")
+            _textPair_id = pairFor(_textColor_id, _color_id);
         _hasBkdg = true;
     }
 
     void Ncurses::clearWindow() const
     {
-        clear();
-        refresh();
+        erase();
+        wnoutrefresh(stdscr);
     }
 
     void Ncurses::render()
     {
-        refresh();
         doupdate();
     }
 
