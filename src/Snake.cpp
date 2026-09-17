@@ -39,22 +39,25 @@ namespace arcade {
     void Snake::run(IDisplayModule *display)
     {
         const std::size_t rectSize = 50;
-        const std::size_t mapX = 650;
-        const std::size_t mapY = 300;
         const std::size_t mapWidth = 10;
         const std::size_t mapHeight = 10;
+        Size windowSize = display->getWindowSize();
+        const std::size_t gridWidth = mapWidth * rectSize;
+        const std::size_t gridHeight = mapHeight * rectSize;
+        const std::size_t mapX = (windowSize.w - gridWidth) / 2;
+        const std::size_t mapY = (windowSize.h - gridHeight) / 2;
         bool mapInit = false;
         bool running = true;
 
         if (!mapInit) {
             for (std::size_t i = 0; i < mapHeight; i++) {
                 for (std::size_t j = 0; j < mapWidth; j++) {
-                    IRect *tile = display->createRect(rectSize, rectSize, mapX + i * rectSize,
-                        mapY + j * rectSize);
+                    IRect *tile = display->createRect({rectSize, rectSize, mapX + i * rectSize,
+                        mapY + j * rectSize});
                     if ((i + j) % 2 == 0)
-                        display->setTexture(tile, {"", 10, 150, 40, 255});
+                        display->setTexture(*tile, {"", 10, 150, 40, 255});
                     else
-                        display->setTexture(tile, {"", 35, 180, 55, 255});
+                        display->setTexture(*tile, {"", 35, 180, 55, 255});
                     _tiles.push_back(tile);
                 }
             }
@@ -64,9 +67,9 @@ namespace arcade {
             EEvent event = display->pollEvent();
             if (event == EEvent::QUIT || event == EEvent::ESCAPE)
                 running = false;
-            display->clear();
+            display->clearWindow();
             for (IRect *tile : _tiles)
-                display->displayRect(tile);
+                display->displayRect(*tile);
             display->render();
         }
     }

@@ -156,6 +156,7 @@ namespace arcade {
                 selector.setPosition(positions.at(selected));
             }
             if (event == EEvent::ENTER) {
+                _display->setBackground({"", 50, 50, 50, 255});
                 loadGame(gameLibs.at(selected));
                 selecting = false;
             }

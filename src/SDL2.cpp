@@ -230,21 +230,24 @@ namespace arcade {
     void SDL2::setBackground(Texture texture)
     {
         if (texture.filepath != "") {
-        SDL_Surface* surface = IMG_Load(texture.filepath.c_str());
-        if (!surface) {
-            std::cout << "Erreur chargement image: " << IMG_GetError() << std::endl;
-            return;
-        }
+            SDL_Surface* surface = IMG_Load(texture.filepath.c_str());
+            if (!surface) {
+                std::cout << "Erreur chargement image: " << IMG_GetError() << std::endl;
+                return;
+            }
 
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
-        if (!texture) {
-            std::cout << "Erreur création texture: " << SDL_GetError() << std::endl;
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
+            if (!texture) {
+                std::cout << "Erreur création texture: " << SDL_GetError() << std::endl;
+                SDL_FreeSurface(surface);
+                return;
+            }
             SDL_FreeSurface(surface);
-            return;
-        }
-        SDL_FreeSurface(surface);
-        _background = texture;
-        _textures.push_back(texture);
+            _background = texture;
+            _textures.push_back(texture);
+        } else {
+            _background = nullptr;
+            _backgroundColor = {texture.r, texture.g, texture.b, texture.a};
         }
     }
 
