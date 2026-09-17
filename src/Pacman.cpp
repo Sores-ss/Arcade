@@ -170,8 +170,8 @@ namespace arcade {
         _rectScore->setTexture({"", 0, 0, 0, 0});
         _rectWord->setTexture({"", 0, 0, 0, 0});
         std::string scoreValue = std::to_string(_score);
-        _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
-        _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/font/font.ttf", 255, 255, 255, 255});
+        _rectWord->setText(_state, {"./assets/font/font.ttf", 255, 255, 255, 255});
     }
 
     void Pacman::displayPacman(std::shared_ptr<IDisplayModule> display)
@@ -329,8 +329,8 @@ namespace arcade {
                     moveGhosts();
             }
             std::string scoreValue = std::to_string(_score);
-            _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
-            _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+            _rectScore->setText("score: " + scoreValue, {"./assets/font/font.ttf", 255, 255, 255, 255});
+            _rectWord->setText(_state, {"./assets/font/font.ttf", 255, 255, 255, 255});
             display->clearWindow();
             _rectBase->display();
             for (auto &mapRect : _map)

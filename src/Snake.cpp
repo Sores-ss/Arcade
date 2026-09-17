@@ -46,7 +46,7 @@ namespace arcade {
     static const Texture HEAD_TILE = {"", 255, 180, 70, 255};
     static const Texture FOOD_TILE = {"", 210, 40, 40, 255};
     static const Texture PANEL_TILE = {"", 35, 35, 35, 220};
-    static const Texture TEXT_TILE = {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255};
+    static const Texture TEXT_TILE = {"./assets/font/font.ttf", 255, 255, 255, 255};
 
     bool Snake::changeDisplay()
     {

@@ -270,7 +270,7 @@ namespace arcade {
         if (!texture.filepath.empty())
             font = TTF_OpenFont(texture.filepath.c_str(), 24);
         if (!font)
-            font = TTF_OpenFont("./assets/Pixellettersfull-BnJ5.ttf", 24);
+            font = TTF_OpenFont("./assets/font/font.ttf", 24);
         if (!font) {
             static bool fontErrorPrinted = false;
             if (!fontErrorPrinted) {

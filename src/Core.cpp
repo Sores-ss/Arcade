@@ -102,7 +102,7 @@ namespace arcade {
                 size_t y = firstY + static_cast<size_t>(libList.size()) * stepY;
                 std::shared_ptr<IRect> libRect = _display->createRect({{buttonW, buttonH}, {baseX, y}});
                 libRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                libRect->setText(_loaderGraphic.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                libRect->setText(_loaderGraphic.getName(handle), {"./assets/font/font.ttf", 255, 255, 255, 255});
                 libRect->setPosition({baseX, y});
                 libList.push_back(libRect);
             }
@@ -180,7 +180,7 @@ namespace arcade {
                 size_t y = firstY + static_cast<size_t>(gameList.size()) * stepY;
                 std::shared_ptr<IRect> gameRect = _display->createRect({{buttonW, buttonH}, {baseX, y}});
                 gameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                gameRect->setText(_loaderGame.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                gameRect->setText(_loaderGame.getName(handle), {"./assets/font/font.ttf", 255, 255, 255, 255});
                 gameRect->setPosition({baseX, y});
                 gameList.push_back(gameRect);
             }
@@ -254,11 +254,11 @@ namespace arcade {
         size_t startY = (window.h > blockH) ? (window.h - blockH) / 2 : 0;
         std::shared_ptr<IRect> input = _display->createRect({{boxW, boxH}, {baseX, startY + stepY}});
         input->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        input->setText("ENTER YOUR NAME: ", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        input->setText("ENTER YOUR NAME: ", {"./assets/font/font.ttf", 255, 255, 255, 255});
         input->setPosition({baseX, startY});
         std::shared_ptr<IRect> confirm = _display->createRect({{boxW, boxH}, {baseX, startY + (stepY * 2)}});
         confirm->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/font/font.ttf", 255, 255, 255, 255});
         confirm->setPosition({baseX, startY + boxH});
         bool selecting = true;
         while (selecting) {
@@ -284,7 +284,7 @@ namespace arcade {
                     input->setPosition({baseX, startY});
                     confirm = _display->createRect({{boxW, boxH}, {baseX, startY + (stepY * 2)}});
                     confirm->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                    confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                    confirm->setText("PRESS ENTER TO CONFIRM", {"./assets/font/font.ttf", 255, 255, 255, 255});
                     confirm->setPosition({baseX, startY + boxH});
                 }
                 continue;
@@ -299,7 +299,7 @@ namespace arcade {
                     _name = "PLAYER";
                 selecting = false;
             }
-            input->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+            input->setText("NAME: " + _name, {"./assets/font/font.ttf", 255, 255, 255, 255});
             _display->clearWindow();
             input->display();
             confirm->display();
@@ -346,9 +346,9 @@ namespace arcade {
             name->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
             game->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
             score->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
-            name->setText("PLAYER", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
-            game->setText("GAME", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
-            score->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
+            name->setText("PLAYER", {"./assets/font/font.ttf", 255, 220, 50, 255});
+            game->setText("GAME", {"./assets/font/font.ttf", 255, 220, 50, 255});
+            score->setText("SCORE", {"./assets/font/font.ttf", 255, 220, 50, 255});
 
             std::vector<std::shared_ptr<IRect>> rows;
             for (size_t i = 0; i < totalRows; ++i) {
@@ -359,9 +359,9 @@ namespace arcade {
                 nameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 gameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 scoreRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                nameRect->setText(entries[i].name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
-                gameRect->setText(entries[i].game, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
-                scoreRect->setText(std::to_string(entries[i].score), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                nameRect->setText(entries[i].name, {"./assets/font/font.ttf", 255, 255, 255, 255});
+                gameRect->setText(entries[i].game, {"./assets/font/font.ttf", 255, 255, 255, 255});
+                scoreRect->setText(std::to_string(entries[i].score), {"./assets/font/font.ttf", 255, 255, 255, 255});
                 rows.push_back(nameRect);
                 rows.push_back(gameRect);
                 rows.push_back(scoreRect);
@@ -427,23 +427,23 @@ namespace arcade {
 
         std::shared_ptr<IRect> playButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY}});
         playButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        playButton->setText("PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        playButton->setText("PLAY", {"./assets/font/font.ttf", 255, 255, 255, 255});
         playButton->setPosition({baseX, firstY});
         std::shared_ptr<IRect> changeLibButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY + stepY}});
         changeLibButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        changeLibButton->setText("LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        changeLibButton->setText("LIB", {"./assets/font/font.ttf", 255, 255, 255, 255});
         changeLibButton->setPosition({baseX, firstY + stepY});
         std::shared_ptr<IRect> exit = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 2)}});
         exit->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        exit->setText("EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        exit->setText("EXIT", {"./assets/font/font.ttf", 255, 255, 255, 255});
         exit->setPosition({baseX, firstY + (stepY * 2)});
         std::shared_ptr<IRect> scores = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
         scores->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        scores->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        scores->setText("SCORE", {"./assets/font/font.ttf", 255, 255, 255, 255});
         scores->setPosition({baseX, firstY + (stepY * 3)});
         std::shared_ptr<IRect> nameField = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
         nameField->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-        nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+        nameField->setText("NAME: " + _name, {"./assets/font/font.ttf", 255, 255, 255, 255});
         nameField->setPosition({baseX, firstY + (stepY * 4)});
         _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
         std::shared_ptr<IRect> selector = _display->createRect({{std::max<size_t>(2, buttonW / 8), buttonH}, {0, 0}});
@@ -509,30 +509,30 @@ namespace arcade {
                 positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}, {selectorX, firstY + (stepY * 3)}, {selectorX, firstY + (stepY * 4)}};
                 playButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY}});
                 playButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                playButton->setText("PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                playButton->setText("PLAY", {"./assets/font/font.ttf", 255, 255, 255, 255});
                 playButton->setPosition({baseX, firstY});
                 changeLibButton = _display->createRect({{buttonW, buttonH}, {baseX, firstY + stepY}});
                 changeLibButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                changeLibButton->setText("LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                changeLibButton->setText("LIB", {"./assets/font/font.ttf", 255, 255, 255, 255});
                 changeLibButton->setPosition({baseX, firstY + stepY});
                 exit = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 2)}});
                 exit->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                exit->setText("EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                exit->setText("EXIT", {"./assets/font/font.ttf", 255, 255, 255, 255});
                 exit->setPosition({baseX, firstY + (stepY * 2)});
                 scores = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 3)}});
                 scores->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                scores->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                scores->setText("SCORE", {"./assets/font/font.ttf", 255, 255, 255, 255});
                 scores->setPosition({baseX, firstY + (stepY * 3)});
                 nameField = _display->createRect({{buttonW, buttonH}, {baseX, firstY + (stepY * 4)}});
                 nameField->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
-                nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                nameField->setText("NAME: " + _name, {"./assets/font/font.ttf", 255, 255, 255, 255});
                 nameField->setPosition({baseX, firstY + (stepY * 4)});
                 selector = _display->createRect({{std::max<size_t>(2, buttonW / 8), buttonH}, {0, 0}});
                 selector->setTexture({"./assets/selector.png", 255, 255, 255, 255});
                 selector->setPosition(positions.at(selected));
                 _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
             }
-            nameField->setText("NAME: " + _name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+            nameField->setText("NAME: " + _name, {"./assets/font/font.ttf", 255, 255, 255, 255});
             _display->clearWindow();
             playButton->display();
             changeLibButton->display();
