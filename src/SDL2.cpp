@@ -51,8 +51,10 @@ namespace arcade {
 
         if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 512) < 0) {
             std::cerr << "Erreur initialisation audio: " << Mix_GetError() << std::endl;
+            _audioEnabled = false;
         }
 
+        _audioEnabled = true;
         _windowSize = {size.w, size.h};
         SDL_Window* window = SDL_CreateWindow(
             name.c_str(),
@@ -123,6 +125,8 @@ namespace arcade {
     }
 
     void SDL2::setMusic(std::string filepath) {
+        if (!_audioEnabled)
+            return;
         if (_music) {
             Mix_FreeMusic(_music);
             _music = nullptr;
@@ -138,7 +142,9 @@ namespace arcade {
             std::cout << "Error playing music: " << Mix_GetError() << std::endl;
     }
 
-    void SDL2::playSound(std::string filepath) const {
+    void SDL2::playSound(std::string filepath) {
+        if (!_audioEnabled)
+            return;
         Mix_Chunk *sound = nullptr;
         auto it = _sounds.find(filepath);
 

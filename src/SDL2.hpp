@@ -25,6 +25,7 @@ namespace arcade {
             mutable std::unordered_map<std::string, Mix_Chunk *> _sounds;
             SDL_Event _event;
             Size _windowSize;
+            bool _audioEnabled;
         public:
             class SDLRect : public IRect {
                 protected:
@@ -69,7 +70,7 @@ namespace arcade {
             SDL2() = default;
             ~SDL2() = default;
             void setMusic(std::string filepath) override;
-            void playSound(std::string filepath) const override;
+            void playSound(std::string filepath) override;
             const Size getWindowSize() const override {return _windowSize;}
             void setBackground(Texture texture) override;
             void clearWindow() const override;

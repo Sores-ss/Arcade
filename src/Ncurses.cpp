@@ -105,7 +105,7 @@ namespace arcade {
         return;
     }
 
-    void Ncurses::playSound([[maybe_unused]]std::string filepath) const {
+    void Ncurses::playSound([[maybe_unused]]std::string filepath) {
         return;
     }
 

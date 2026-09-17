@@ -67,7 +67,7 @@ namespace arcade {
             virtual void setBackground(Texture texture) = 0;
             virtual std::shared_ptr<IRect> createRect(Bounds bounds) = 0;
             virtual void setMusic(std::string filepath) = 0;
-            virtual void playSound(std::string filepath) const = 0;
+            virtual void playSound(std::string filepath) = 0;
             virtual void render() = 0;
             virtual EEvent pollEvent() = 0;
             virtual void clearWindow() const = 0;

@@ -80,7 +80,7 @@ namespace arcade {
             void setBackground(Texture texture) override;
             std::shared_ptr<IRect> createRect(Bounds bounds) override;
             void setMusic([[maybe_unused]]std::string filepath) override {};
-            void playSound([[maybe_unused]]std::string filepath) const override {};
+            void playSound([[maybe_unused]]std::string filepath) override {};
             void render() override;
             EEvent pollEvent() override;
             void clearWindow() const  override;
