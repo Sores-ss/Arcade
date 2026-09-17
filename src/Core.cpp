@@ -12,19 +12,6 @@
 #include <filesystem>
 
 namespace arcade {
-    const EType Core::getType(const std::string &lib)
-    {
-        DLLoader<IDisplayModule> loader;
-
-        void *handle = loader.open(lib);
-        if (!handle)
-            throw Exception("Invalid open library");
-        IDisplayModule *library = loader.getInstance(handle);
-        EType type = library->getType();
-        loader.close(handle);
-        return type;
-    }
-
     std::vector<std::string> Core::initLibList(std::string lib)
     {
         std::vector<std::string> newMap = std::vector<std::string>();
@@ -57,7 +44,13 @@ namespace arcade {
     void Core::loadLib(const std::string &path)
     {
         _handle = _loader.open(path);
-        _display = _loader.getInstance(_handle);
-        _display->init("SDL2", 1920, 1080);
+        _type = _loader.getType(_handle);
+        if (_type == EType::GRAPHICAL) {
+            _display = _loader.getInstance(_handle);
+            _name = _loader.getName(_handle);
+            if (_name == "SDL2")
+                _display->init("SDL2", 1920, 1080);
+        } else
+            throw Exception("Error: '" + path + "' not a graphical library");
     }
 }
