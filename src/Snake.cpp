@@ -29,7 +29,7 @@ extern "C" {
         return new arcade::Snake();
     }
 
-    const arcade::EType getLibType(void)
+    arcade::EType getLibType(void)
     {
         return arcade::EType::GAME;
     }
@@ -106,14 +106,14 @@ namespace arcade {
     {
         if (_scoreRect == nullptr || _display == nullptr)
             return;
-        _display->setText(*_scoreRect, "SCORE: " + std::to_string(_score), TEXT_TILE);
+        _scoreRect->setText("SCORE: " + std::to_string(_score), TEXT_TILE);
     }
 
     void Snake::updateStatusText(const std::string &status)
     {
         if (_statusRect == nullptr || _display == nullptr)
             return;
-        _display->setText(*_statusRect, status, TEXT_TILE);
+        _statusRect->setText(status, TEXT_TILE);
     }
 
     void Snake::initBoard()
@@ -133,8 +133,8 @@ namespace arcade {
         }
         _scoreRect = _display->createRect({260, 65, mapX, mapY - 90});
         _statusRect = _display->createRect({360, 65, mapX + gridWidth - 360, mapY - 90});
-        _display->setTexture(*_scoreRect, PANEL_TILE);
-        _display->setTexture(*_statusRect, PANEL_TILE);
+        _scoreRect->setTexture(PANEL_TILE);
+        _statusRect->setTexture(PANEL_TILE);
         updateStatusText("RUNNING");
     }
 
@@ -255,17 +255,17 @@ namespace arcade {
         for (std::size_t y = 0; y < _mapHeight; ++y) {
             for (std::size_t x = 0; x < _mapWidth; ++x) {
                 Texture checker = ((x + y) % 2 == 0) ? LIGHT_TILE : DARK_TILE;
-                _display->setTexture(*_tiles[y * _mapWidth + x], checker);
+                _tiles[y * _mapWidth + x]->setTexture(checker);
             }
         }
         for (std::size_t i = 1; i < _snake.size(); ++i)
-            _display->setTexture(*_tiles[getIndex(_snake[i])], BODY_TILE);
-        _display->setTexture(*_tiles[getIndex(_snake.front())], HEAD_TILE);
-        _display->setTexture(*_tiles[getIndex(_food)], FOOD_TILE);
-        _display->displayRect(*_scoreRect);
-        _display->displayRect(*_statusRect);
+            _tiles[getIndex(_snake[i])]->setTexture(BODY_TILE);
+        _tiles[getIndex(_snake.front())]->setTexture(HEAD_TILE);
+        _tiles[getIndex(_food)]->setTexture(FOOD_TILE);
+        _scoreRect->display();
+        _statusRect->display();
         for (IRect *tile : _tiles)
-            _display->displayRect(*tile);
+            tile->display();
     }
 
     void Snake::run(IDisplayModule *display)
