@@ -41,5 +41,10 @@ namespace arcade {
             char eventToChar(EEvent event);
             bool userName();
             void displayScore();
+            struct ScoreEntry {
+                std::string name;
+                std::string game;
+                int score;
+            };
     };
 }

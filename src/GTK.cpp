@@ -170,7 +170,7 @@ namespace arcade {
         gtk_style_context_add_class(fixedCtx, "arc-fixed");
         {
             GtkCssProvider *p = gtk_css_provider_new();
-            gtk_css_provider_load_from_data(p, ".arc-fixed { background: transparent; padding:0; margin:0; }", 1, nullptr);
+            gtk_css_provider_load_from_data(p, ".arc-fixed { background: transparent; padding:0; margin:0; }", -1, nullptr);
             gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(p), GTK_STYLE_PROVIDER_PRIORITY_USER);
             g_object_unref(p);
         }
@@ -194,8 +194,11 @@ namespace arcade {
     {
         _cssCache.clear();
 
-        if (_window != nullptr && GTK_IS_WINDOW(_window))
+        if (_window != nullptr && GTK_IS_WINDOW(_window)) {
+            g_signal_handlers_disconnect_by_data(_window, this);
             gtk_widget_destroy(_window);
+            drainMainContext();
+        }
         _window  = nullptr;
         _fixed   = nullptr;
         _running = false;

@@ -9,6 +9,7 @@
 
 #include "IGameModule.hpp"
 #include <vector>
+#include <fstream>
 
 namespace arcade {
     class Snake : public IGameModule {

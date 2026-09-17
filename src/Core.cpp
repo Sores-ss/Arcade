@@ -11,6 +11,7 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+#include <fstream>
 
 namespace arcade {
     char Core::eventToChar(EEvent event)
@@ -48,10 +49,6 @@ namespace arcade {
         bool wantsDisplayChange = _game->changeDisplay();
         if (wantsDisplayChange) {
             std::string nextGraphic = changeDisplay();
-            _game.reset();
-            _loaderGame.close(_handleGame);
-            _handleGame = nullptr;
-            _currentGamePath.clear();
             return nextGraphic;
         }
         _game.reset();
@@ -313,7 +310,99 @@ namespace arcade {
 
     void Core::displayScore()
     {
-        std::cout << "display score" << std::endl;
+        std::vector<ScoreEntry> entries;
+        std::ifstream file("./scores.txt");
+        if (file.is_open()) {
+            std::string line;
+            while (std::getline(file, line)) {
+                std::stringstream iss(line);
+                ScoreEntry entry;
+                if (iss >> entry.name >> entry.game >> entry.score)
+                    entries.push_back(entry);
+            }
+            file.close();
+        }
+        bool showingScores = true;
+
+        while (showingScores) {
+            Size window = _display->getWindowSize();
+            size_t colW = std::max<size_t>(14, window.w / 5);
+            size_t rowH = std::max<size_t>(3,  window.h / 14);
+            size_t stepY = std::max<size_t>(2,  rowH + 1);
+            size_t tableW = colW * 3 + 2;
+            size_t centerX = window.w / 2;
+            size_t baseX = (centerX > tableW / 2) ? centerX - tableW / 2 : 0;
+            size_t col1X = baseX;
+            size_t col2X = baseX + colW + 1;
+            size_t col3X = baseX + (colW + 1) * 2;
+            size_t maxRows = 8;
+            size_t totalRows = std::min(entries.size(), maxRows);
+            size_t tableH = (totalRows + 1) * stepY;
+            size_t startY = (window.h > tableH) ? (window.h - tableH) / 2 : 0;
+
+            std::shared_ptr<IRect> name = _display->createRect({{colW, rowH}, {col1X, startY}});
+            std::shared_ptr<IRect> game = _display->createRect({{colW, rowH}, {col2X, startY}});
+            std::shared_ptr<IRect> score = _display->createRect({{colW, rowH}, {col3X, startY}});
+            name->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
+            game->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
+            score->setTexture({"./assets/button_texture.png", 80, 80, 160, 255});
+            name->setText("PLAYER", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
+            game->setText("GAME", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
+            score->setText("SCORE", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 220, 50, 255});
+
+            std::vector<std::shared_ptr<IRect>> rows;
+            for (size_t i = 0; i < totalRows; ++i) {
+                size_t y = startY + (i + 1) * stepY;
+                auto nameRect = _display->createRect({{colW, rowH}, {col1X, y}});
+                auto gameRect = _display->createRect({{colW, rowH}, {col2X, y}});
+                auto scoreRect = _display->createRect({{colW, rowH}, {col3X, y}});
+                nameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                gameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                scoreRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
+                nameRect->setText(entries[i].name, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                gameRect->setText(entries[i].game, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                scoreRect->setText(std::to_string(entries[i].score), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
+                rows.push_back(nameRect);
+                rows.push_back(gameRect);
+                rows.push_back(scoreRect);
+            }
+
+            bool running = true;
+            bool switchDisplay = false;
+            std::string nextGraphic;
+
+            while (running) {
+                EEvent event = _display->pollEvent();
+                if (event == QUIT || event == ESCAPE) {
+                    running = false;
+                    showingScores = false;
+                }
+                if (event == TAB) {
+                    nextGraphic = changeDisplay();
+                    if (!nextGraphic.empty()) {
+                        switchDisplay = true;
+                        running = false;
+                    }
+                }
+                _display->clearWindow();
+                name->display();
+                game->display();
+                score->display();
+                for (auto &rect : rows)
+                    rect->display();
+                _display->render();
+            }
+
+            rows.clear();
+            name.reset();
+            game.reset();
+            score.reset();
+
+            if (switchDisplay) {
+                loadGraphic(nextGraphic);
+                _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
+            }
+        }
     }
 
     void Core::run(const std::string &lib)

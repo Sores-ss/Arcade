@@ -15,7 +15,7 @@ SDL_LIB = lib/arcade_sdl2.so
 SDL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 SDL_SRC = src/SDL2.cpp
 
-GTK_LIB = lib/arcade_gtk.so
+GTK_LIB = lib/arcade_gtk+.so
 GTK_SRC = src/GTK.cpp
 GTK_PKG ?= gtk+-3.0
 GTK_FLAGS = $(shell pkg-config --cflags --libs $(GTK_PKG) 2>/dev/null)

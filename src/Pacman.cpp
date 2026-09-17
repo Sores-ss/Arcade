@@ -341,7 +341,7 @@ namespace arcade {
             _rectWord->display();
             display->render();
         }
-        std::ofstream file("scores.txt", std::ios::out);
+        std::ofstream file("scores.txt", std::ios::app);
         if (file) {
             file << name << " Pacman " << _score << std::endl;
             file.close();

@@ -371,6 +371,11 @@ namespace arcade {
         }
         cleanup(!_changeDisplay);
         _display = nullptr;
+        std::ofstream file("scores.txt", std::ios::app);
+        if (file) {
+            file << name << " Snake " << _score << std::endl;
+            file.close();
+        }
     }
 
     void Snake::pause()
