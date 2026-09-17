@@ -9,7 +9,6 @@
 #include "Exception.hpp"
 #include <SDL2/SDL.h>
 
-
 __attribute__((constructor)) void create(void)
 {
     std::cout << "Opening libsdl2..." << std::endl;
@@ -20,11 +19,22 @@ __attribute__((destructor)) void destroy(void)
     std::cout << "Closing libsdl2..." << std::endl;
 }
 
+extern "C" {
+    arcade::SDL2 *myEntryPoint(void)
+    {
+        std::cout << "Loading libsdl2.." << std::endl;
+        return new arcade::SDL2();
+    }
 
-extern "C" arcade::SDL2 *myEntryPoint(void)
-{
-    std::cout << "Loading libsdl2.." << std::endl;
-    return new arcade::SDL2();
+    const arcade::EType getLibType(void)
+    {
+        return arcade::EType::GRAPHICAL;
+    }
+
+    const std::string getLibName(void)
+    {
+        return "SDL2";
+    }
 }
 
 namespace arcade {
@@ -62,15 +72,6 @@ namespace arcade {
         if (_window)
             SDL_DestroyWindow(_window);
         SDL_Quit();
-    }
-
-    const EType &SDL2::getType() const {
-        return _type;
-    }
-
-    const std::string &SDL2::getName() const {
-        static const std::string name = "SDL2";
-        return name;
     }
 
     const void SDL2::display(IButton *b) const {
@@ -121,12 +122,11 @@ namespace arcade {
 
     EEvent SDL2::pollEvent()
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
+        while (SDL_PollEvent(&_event)) {
+            if (_event.type == SDL_QUIT)
                 return EEvent::QUIT;
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_ESCAPE)
+            if (_event.type == SDL_KEYDOWN) {
+                if (_event.key.keysym.sym == SDLK_ESCAPE)
                     return EEvent::ESCAPE;
             }
         }

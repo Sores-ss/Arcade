@@ -35,8 +35,6 @@ namespace arcade {
             virtual void stop() = 0;
             virtual void render() = 0;
             virtual EEvent pollEvent() = 0;
-            virtual const std::string &getName() const = 0;
-            virtual const EType &getType() const = 0;
             virtual const void display(IButton *b) const = 0;
             virtual const IButton *createButton(size_t width, size_t height, size_t x, size_t y) = 0;
     };

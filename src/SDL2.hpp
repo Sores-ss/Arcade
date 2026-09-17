@@ -37,8 +37,6 @@ namespace arcade {
             virtual void render() override;
             virtual EEvent pollEvent() override;
             const void display(IButton *b) const override;
-            const std::string &getName() const override;
-            const EType &getType() const override;
             const IButton *createButton(size_t width, size_t height, size_t x, size_t y) override;
     };
 }
