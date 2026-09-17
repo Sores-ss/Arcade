@@ -25,8 +25,8 @@ namespace arcade {
             DLLoader<IGameModule> _loaderGame;
             void *_handleGraphic = nullptr;
             void *_handleGame = nullptr;
-            IDisplayModule *_displayGraphic = nullptr;
-            IGameModule *_displayGame = nullptr;
+            IDisplayModule *_display = nullptr;
+            IGameModule *_game = nullptr;
             EType _type;
             std::string _name;
             void loadGraphic(const std::string &path);

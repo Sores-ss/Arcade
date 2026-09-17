@@ -30,6 +30,7 @@ namespace arcade {
                 public:
                     SDLRect(SDL_Rect rect, SDL_Color color) {_rect = rect; _color = color;}
                     ~SDLRect() = default;
+                    rectInfo_t getRectInfo() const override;
                     SDL_Texture *getTextTexture() const {return _textTexture;}
                     SDL_Rect &getTextRect() {return _textRect;}
                     void setTexture(SDL_Texture *texture) {_texture = texture;}

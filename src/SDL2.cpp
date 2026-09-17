@@ -127,6 +127,10 @@ namespace arcade {
         return new SDLRect(rect, color);
     }
 
+    rectInfo_t SDL2::SDLRect::getRectInfo() const {
+        return {static_cast<std::size_t>(_rect.x), static_cast<std::size_t>(_rect.y), static_cast<std::size_t>(_rect.w), static_cast<std::size_t>(_rect.h)};
+    }
+
     bool SDL2::SDLRect::isMouseOver() const
     {
         int mouseX = 0;
@@ -221,6 +225,17 @@ namespace arcade {
             if (_event.type == SDL_KEYDOWN) {
                 if (_event.key.keysym.sym == SDLK_ESCAPE)
                     return EEvent::ESCAPE;
+                if (_event.key.keysym.sym == SDLK_DOWN)
+                    return EEvent::DOWN;
+                if (_event.key.keysym.sym == SDLK_UP)
+                    return EEvent::UP;
+                if (_event.key.keysym.sym == SDLK_LEFT)
+                    return EEvent::LEFT;
+                if (_event.key.keysym.sym == SDLK_RIGHT)
+                    return EEvent::RIGHT;
+                if (_event.key.keysym.sym == SDLK_RETURN) {
+                    return EEvent::ENTER;
+                }
             }
         }
         return EEvent::UNDEFINED;
