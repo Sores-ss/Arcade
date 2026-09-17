@@ -6,6 +6,7 @@
 */
 
 #include "Pacman.hpp"
+#include "Exception.hpp"
 
 __attribute__((constructor)) void create(void)
 {
@@ -36,20 +37,10 @@ extern "C" {
 }
 
 namespace arcade {
-    void Pacman::resetGame(IDisplayModule *display)
+    void Pacman::resetGame(std::shared_ptr<IDisplayModule> display)
     {
-        for (auto &tile : _map) {
-            if (tile.rect != nullptr)
-                delete tile.rect;
-        }
         _map.clear();
         _gumMap.clear();
-        if (_rectBase != nullptr)
-            delete _rectBase;
-        if (_rectScore != nullptr)
-            delete _rectScore;
-        if (_rectWord != nullptr)
-            delete _rectWord;
         _rectBase = nullptr;
         _rectScore = nullptr;
         _rectWord = nullptr;
@@ -97,11 +88,15 @@ namespace arcade {
         return y;
     }
 
-    void Pacman::loadMap(IDisplayModule *display)
+    void Pacman::loadMap(std::shared_ptr<IDisplayModule> display)
     {
         _windowSize = display->getWindowSize();
         if (_windowSize.w < 300)
             _tileSize = 1;
+        if (_windowSize.w < MAP_WIDTH || _windowSize.h < MAP_HEIGHT) {
+            throw Exception("Pacman needs at least " + std::to_string(MAP_WIDTH) + "x" +
+                std::to_string(MAP_HEIGHT) + " terminal cells in ncurses");
+        }
         _rectBounds = {_tileSize * MAP_WIDTH, _tileSize * MAP_HEIGHT, 0, 0};
         _rectBounds.x = (_windowSize.w - _rectBounds.w) / 2;
         _rectBounds.y = (_windowSize.h - _rectBounds.h) / 2;
@@ -114,7 +109,7 @@ namespace arcade {
         _rectBase = display->createRect(_rectBounds);
         _rectScore = display->createRect(scoreBounds);
         _rectWord = display->createRect(runningBounds);
-        _gumMap.resize(MAP_HEIGHT, std::vector<IRect *>(MAP_WIDTH, nullptr));
+        _gumMap.resize(MAP_HEIGHT, std::vector<std::shared_ptr<IRect>>(MAP_WIDTH, nullptr));
         size_t borderThick = (_tileSize > 1) ? 2 : 1;
         for (size_t i = 0; i < map.size(); i++) {
             for (size_t j = 0; j < map[i].size(); j++) {
@@ -124,28 +119,28 @@ namespace arcade {
                     bool left = (j == 0 || map[i][j - 1] != '#');
                     bool right = (j + 1 >= map[i].size() || map[i][j + 1] != '#');
                     if (top) {
-                        IRect *topBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
+                        std::shared_ptr<IRect> topBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
                         topBorder->setTexture({"", 21, 1, 87, 0});
                         _map.push_back({topBorder, true});
                     }
                     if (bot) {
-                        IRect *bottomBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize + _tileSize - borderThick});
+                        std::shared_ptr<IRect> bottomBorder = display->createRect({_tileSize, borderThick, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize + _tileSize - borderThick});
                         bottomBorder->setTexture({"", 21, 1, 87, 0});
                         _map.push_back({bottomBorder, true});
                     }
                     if (left) {
-                        IRect *leftBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
+                        std::shared_ptr<IRect> leftBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
                         leftBorder->setTexture({"", 21, 1, 87, 0});
                         _map.push_back({leftBorder, true});
                     }
                     if (right) {
-                        IRect *rightBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize + _tileSize - borderThick, _rectBounds.y + i * _tileSize});
+                        std::shared_ptr<IRect> rightBorder = display->createRect({borderThick, _tileSize, _rectBounds.x + j * _tileSize + _tileSize - borderThick, _rectBounds.y + i * _tileSize});
                         rightBorder->setTexture({"", 21, 1, 87, 0});
                         _map.push_back({rightBorder, true});
                     }
                 }
                 if (map[i][j] == '0') {
-                    IRect *bigGum = display->createRect({_tileSize, _tileSize, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
+                    std::shared_ptr<IRect> bigGum = display->createRect({_tileSize, _tileSize, _rectBounds.x + j * _tileSize, _rectBounds.y + i * _tileSize});
                     bigGum->setTexture({"./assets/pacgum.png", 224, 0, 0, 255});
                     _gumMap[i][j] = bigGum;
                     _map.push_back({bigGum, true});
@@ -153,7 +148,7 @@ namespace arcade {
                 if (map[i][j] == '.') {
                     size_t gumSize = (_tileSize > 1) ? 6 : 1;
                     size_t gumOff  = (_tileSize > 1) ? 4 : 0;
-                    IRect *gum = display->createRect({gumSize, gumSize, _rectBounds.x + j * _tileSize + gumOff, _rectBounds.y + i * _tileSize + gumOff});
+                    std::shared_ptr<IRect> gum = display->createRect({gumSize, gumSize, _rectBounds.x + j * _tileSize + gumOff, _rectBounds.y + i * _tileSize + gumOff});
                     gum->setTexture({"./assets/pacgum.png", 15, 224, 0, 255});
                     _gumMap[i][j] = gum;
                     _map.push_back({gum, true});
@@ -169,7 +164,7 @@ namespace arcade {
         _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
     }
 
-    void Pacman::displayPacman(IDisplayModule *display)
+    void Pacman::displayPacman(std::shared_ptr<IDisplayModule> display)
     {
         _pacman = display->createRect({_tileSize, _tileSize,
             _rectBounds.x + _pacmanStartX * _tileSize,
@@ -225,7 +220,7 @@ namespace arcade {
         }
         _pacman->setPosition({_rectBounds.x + _pacmanStartX * _tileSize, _rectBounds.y + _pacmanStartY * _tileSize});
         if (map[_pacmanStartY][_pacmanStartX] == '.') {
-            IRect *gum = _gumMap[_pacmanStartY][_pacmanStartX];
+            std::shared_ptr<IRect> gum = _gumMap[_pacmanStartY][_pacmanStartX];
             if (gum) {
                 for (auto &tile : _map)
                     if (tile.rect == gum){
@@ -253,7 +248,7 @@ namespace arcade {
             }
         }
         if (map[_pacmanStartY][_pacmanStartX] == '0') {
-            IRect *gum = _gumMap[_pacmanStartY][_pacmanStartX];
+            std::shared_ptr<IRect> gum = _gumMap[_pacmanStartY][_pacmanStartX];
             if (gum) {
                 for (auto &tile : _map) {
                     if (tile.rect == gum) {
@@ -283,7 +278,7 @@ namespace arcade {
         _pacman->setTexture({_pacmanDirection, 224, 213, 0, 255});
     }
 
-    void Pacman::run(IDisplayModule *display)
+    void Pacman::run(std::shared_ptr<IDisplayModule> display)
     {
         bool running = true;
         resetGame(display);
@@ -317,7 +312,7 @@ namespace arcade {
         }
     }
 
-    void Pacman::displayGhosts(IDisplayModule *display)
+    void Pacman::displayGhosts(std::shared_ptr<IDisplayModule> display)
     {
         std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
         auto now = std::chrono::steady_clock::now();

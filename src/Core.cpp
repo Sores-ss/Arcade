@@ -32,7 +32,7 @@ namespace arcade {
         _handleGame = _loaderGame.open(path);
         EType type = _loaderGame.getType(_handleGame);
         if (type == EType::GAME) {
-            _game = _loaderGame.getInstance(_handleGame);
+            _game = std::unique_ptr<IGameModule>(_loaderGame.getInstance(_handleGame));
             _game->run(_display);
         } else
             throw Exception("Error: invalid game library : " + path);
@@ -40,7 +40,7 @@ namespace arcade {
 
     std::string Core::runlib(IRect &selector, bool &running)
     {
-        std::vector<IRect *> libList;
+        std::vector<std::shared_ptr<IRect>> libList;
         std::vector<void *> handles;
         Size window = _display->getWindowSize();
         size_t buttonW = std::max<size_t>(18, window.w / 3);
@@ -61,7 +61,7 @@ namespace arcade {
                 graphicalLibs.push_back(lib);
                 handles.push_back(handle);
                 size_t y = firstY + static_cast<size_t>(libList.size()) * stepY;
-                IRect *libRect = _display->createRect({buttonW, buttonH, baseX, y});
+                std::shared_ptr<IRect> libRect = _display->createRect({buttonW, buttonH, baseX, y});
                 libRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 libRect->setText(_loaderGraphic.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 libRect->setPosition({baseX, y});
@@ -104,8 +104,6 @@ namespace arcade {
             selector.display();
             _display->render();
         }
-        for (auto &lib : libList)
-            delete lib;
         for (auto &handle : handles)
             _loaderGraphic.close(handle);
         return selectedLib;
@@ -113,7 +111,7 @@ namespace arcade {
 
     void Core::runGames(IRect &selector, bool &running)
     {
-        std::vector<IRect *> gameList;
+        std::vector<std::shared_ptr<IRect>> gameList;
         std::vector<void *> handles;
         Size window = _display->getWindowSize();
         size_t buttonW = std::max<size_t>(18, window.w / 3);
@@ -133,7 +131,7 @@ namespace arcade {
                 gameLibs.push_back(lib);
                 handles.push_back(handle);
                 size_t y = firstY + static_cast<size_t>(gameList.size()) * stepY;
-                IRect *gameRect = _display->createRect({buttonW, buttonH, baseX, y});
+                std::shared_ptr<IRect> gameRect = _display->createRect({buttonW, buttonH, baseX, y});
                 gameRect->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
                 gameRect->setText(_loaderGame.getName(handle), {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
                 gameRect->setPosition({baseX, y});
@@ -176,12 +174,13 @@ namespace arcade {
             selector.display();
             _display->render();
         }
-        for (auto &game : gameList)
-            delete game;
         for (auto &handle : handles)
             _loaderGame.close(handle);
-        if (_game != nullptr)
+        if (_game != nullptr) {
+            _game.reset();
             _loaderGame.close(_handleGame);
+            _handleGame = nullptr;
+        }
     }
 
     void Core::run(const std::string &lib)
@@ -197,20 +196,20 @@ namespace arcade {
         size_t firstY = (centerY > (buttonH * 2)) ? centerY - (buttonH * 2) : 0;
         size_t stepY = std::max<size_t>(2, buttonH + 1);
 
-        IRect *playButton = _display->createRect({buttonW, buttonH, baseX, firstY});
+        std::shared_ptr<IRect> playButton = _display->createRect({buttonW, buttonH, baseX, firstY});
         playButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         playButton->setText("PLAY", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         playButton->setPosition({baseX, firstY});
-        IRect *changeLibButton = _display->createRect({buttonW, buttonH, baseX, firstY + stepY});
+        std::shared_ptr<IRect> changeLibButton = _display->createRect({buttonW, buttonH, baseX, firstY + stepY});
         changeLibButton->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         changeLibButton->setText("LIB", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         changeLibButton->setPosition({baseX, firstY + stepY});
-        IRect *exit = _display->createRect({buttonW, buttonH, baseX, firstY + (stepY * 2)});
+        std::shared_ptr<IRect> exit = _display->createRect({buttonW, buttonH, baseX, firstY + (stepY * 2)});
         exit->setTexture({"./assets/button_texture.png", 180, 180, 180, 255});
         exit->setText("EXIT", {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 255});
         exit->setPosition({baseX, firstY + (stepY * 2)});
         _display->setBackground({"./assets/background.jpg", 0, 0, 0, 255});
-        IRect *selector = _display->createRect({std::max<size_t>(2, buttonW / 8), buttonH, 0, 0});
+        std::shared_ptr<IRect> selector = _display->createRect({std::max<size_t>(2, buttonW / 8), buttonH, 0, 0});
         selector->setTexture({"./assets/selector.png", 255, 255, 255, 255});
         size_t selectorX = (baseX > std::max<size_t>(2, buttonW / 8) + 1) ? baseX - (std::max<size_t>(2, buttonW / 8) + 1) : 0;
         std::vector<Position> positions = {{selectorX, firstY}, {selectorX, firstY + stepY}, {selectorX, firstY + (stepY * 2)}};
@@ -241,10 +240,6 @@ namespace arcade {
                 
                 if (!running)
                     break;
-                delete playButton;
-                delete changeLibButton;
-                delete exit;
-                delete selector;
                 if (!selectedGraphic.empty())
                     loadGraphic(selectedGraphic);
                 window = _display->getWindowSize();
@@ -281,24 +276,24 @@ namespace arcade {
             selector->display();
             _display->render();
         }
-        delete playButton;
-        delete changeLibButton;
-        delete exit;
-        delete selector;
         _display->stop();
+        _display.reset();
         _loaderGraphic.close(_handleGraphic);
+        _handleGraphic = nullptr;
     }
 
     void Core::loadGraphic(const std::string &path)
     {
         if (_display != nullptr) {
             _display->stop();
+            _display.reset();
             _loaderGraphic.close(_handleGraphic);
+            _handleGraphic = nullptr;
         }
         _handleGraphic = _loaderGraphic.open(path);
         _type = _loaderGraphic.getType(_handleGraphic);
         if (_type == EType::GRAPHICAL) {
-            _display = _loaderGraphic.getInstance(_handleGraphic);
+            _display = std::shared_ptr<IDisplayModule>(_loaderGraphic.getInstance(_handleGraphic));
             _name = _loaderGraphic.getName(_handleGraphic);
             _display->init(_name, {1920, 1080});
         } else

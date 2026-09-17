@@ -128,14 +128,14 @@ namespace arcade {
         wnoutrefresh(_win);
     }
 
-    IRect *Ncurses::createRect(Bounds bound) {
-        ncursesRect *Rect = new ncursesRect(_colors_id, _pairs_id, _event);
+    std::shared_ptr<IRect> Ncurses::createRect(Bounds bound) {
         WINDOW *win = newwin(bound.h, bound.w, bound.y, bound.x);
         if (win == nullptr)
             throw Exception("Failed to create ncurses window");
+        auto rect = std::make_shared<ncursesRect>(_colors_id, _pairs_id, _event);
         box(win, 0, 0);
-        Rect->setWin(win);
-        return Rect;
+        rect->setWin(win);
+        return rect;
     }
 
     void Ncurses::ncursesRect::setSize(Size size) {

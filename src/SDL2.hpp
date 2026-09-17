@@ -77,6 +77,6 @@ namespace arcade {
             void stop() override;
             void render() override;
             EEvent pollEvent() override;
-            IRect *createRect(Bounds bound) override;
+            std::shared_ptr<IRect> createRect(Bounds bound) override;
     };
 }

@@ -9,6 +9,7 @@
 
 #include "IDisplayModule.hpp"
 #include <ncurses.h>
+#include <memory>
 
 namespace arcade {
     class Ncurses : public IDisplayModule {
@@ -56,7 +57,7 @@ namespace arcade {
             void init(std::string name, Size size) override;
             void stop() override;
             void setBackground(Texture texture) override;
-            IRect *createRect(Bounds bounds) override;
+            std::shared_ptr<IRect> createRect(Bounds bounds) override;
             void setMusic(std::string filepath) override;
             void playSound(std::string filepath) const override;
             void render() override;

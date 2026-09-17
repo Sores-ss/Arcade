@@ -21,30 +21,30 @@ namespace arcade {
         public:
             Pacman() = default;
             ~Pacman() = default;
-            void run(IDisplayModule *display) override;
+            void run(std::shared_ptr<IDisplayModule> display) override;
             void pause() override;
         private:
             int _score = 0;
             size_t _pacmanStartX = 13;
             size_t _pacmanStartY = 17;
-            void loadMap(IDisplayModule *display);
-            void displayPacman(IDisplayModule *display);
+            void loadMap(std::shared_ptr<IDisplayModule> display);
+            void displayPacman(std::shared_ptr<IDisplayModule> display);
             void updateDirection(EEvent event);
             void movePacman();
             int handleX(int x) const;
             int handleY(int y) const;
-            void displayGhosts(IDisplayModule *display);
+            void displayGhosts(std::shared_ptr<IDisplayModule> display);
             void moveGhosts();
             bool isWalkableTile(int x, int y) const;
             bool canGhostMoveTo(size_t ghostIndex, int x, int y) const;
             bool isInCage(int x, int y) const;
-            void resetGame(IDisplayModule *display);
-            IRect *_rectBase;
-            IRect *_rectScore;
-            IRect *_rectWord;
-            IRect *_pacman;
+            void resetGame(std::shared_ptr<IDisplayModule> display);
+            std::shared_ptr<IRect> _rectBase = nullptr;
+            std::shared_ptr<IRect> _rectScore = nullptr;
+            std::shared_ptr<IRect> _rectWord = nullptr;
+            std::shared_ptr<IRect> _pacman = nullptr;
             struct Tile {
-                IRect *rect;
+                std::shared_ptr<IRect> rect;
                 bool visible;
             };
             std::vector <Tile> _map;
@@ -91,13 +91,13 @@ namespace arcade {
                 "############################",
             };
             std::vector<std::string> map;
-            std::vector<std::vector<IRect *>> _gumMap;
+            std::vector<std::vector<std::shared_ptr<IRect>>> _gumMap;
             bool _paused = false;
             std::string _state = "RUNNING";
             std::string _pacmanDirection = "./assets/pacman_right.png";
             void changePacman();
             struct Ghost {
-                IRect *rect = nullptr;
+                std::shared_ptr<IRect> rect = nullptr;
                 int x = 0;
                 int y = 0;
                 int dirX = 1;

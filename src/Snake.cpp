@@ -178,7 +178,7 @@ namespace arcade {
 
         for (std::size_t y = 0; y < _mapHeight; ++y) {
             for (std::size_t x = 0; x < _mapWidth; ++x) {
-                IRect *tile = _display->createRect({cellSize, cellSize,
+                std::shared_ptr<IRect> tile = _display->createRect({cellSize, cellSize,
                     mapX + x * cellSize, mapY + y * cellSize});
                 _tiles.push_back(tile);
             }
@@ -211,13 +211,7 @@ namespace arcade {
 
     void Snake::cleanup()
     {
-        for (IRect *tile : _tiles)
-            delete tile;
         _tiles.clear();
-        if (_scoreRect != nullptr)
-            delete _scoreRect;
-        if (_statusRect != nullptr)
-            delete _statusRect;
         _scoreRect = nullptr;
         _statusRect = nullptr;
         _snake.clear();
@@ -316,11 +310,11 @@ namespace arcade {
         _tiles[getIndex(_food)]->setTexture(FOOD_TILE);
         _scoreRect->display();
         _statusRect->display();
-        for (IRect *tile : _tiles)
+        for (auto &tile : _tiles)
             tile->display();
     }
 
-    void Snake::run(IDisplayModule *display)
+    void Snake::run(std::shared_ptr<IDisplayModule> display)
     {
         if (display == nullptr)
             return;

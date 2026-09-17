@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include "IRect.hpp"
+#include <memory>
 
 namespace arcade {
     enum EType {
@@ -36,7 +37,7 @@ namespace arcade {
             virtual const Size getWindowSize() const = 0;
             virtual void stop() = 0;
             virtual void setBackground(Texture texture) = 0;
-            virtual IRect *createRect(Bounds bounds) = 0;
+            virtual std::shared_ptr<IRect> createRect(Bounds bounds) = 0;
             virtual void setMusic(std::string filepath) = 0;
             virtual void playSound(std::string filepath) const = 0;
             virtual void render() = 0;

@@ -15,7 +15,7 @@ namespace arcade {
         public:
             Snake() = default;
             ~Snake() = default;
-            void run(IDisplayModule *display) override;
+            void run(std::shared_ptr<IDisplayModule> display) override;
             void pause() override;
         private:
             enum Direction {
@@ -29,14 +29,14 @@ namespace arcade {
             static constexpr std::size_t _mapHeight = 20;
             static constexpr std::size_t _cellSize = 32;
 
-            std::vector<IRect *> _tiles;
+            std::vector<std::shared_ptr<IRect>> _tiles;
             std::vector<Size> _snake;
             Size _food = {0, 0};
             Direction _direction = DIR_RIGHT;
             Direction _nextDirection = DIR_RIGHT;
-            IDisplayModule *_display = nullptr;
-            IRect *_scoreRect = nullptr;
-            IRect *_statusRect = nullptr;
+            std::shared_ptr<IDisplayModule> _display = nullptr;
+            std::shared_ptr<IRect> _scoreRect = nullptr;
+            std::shared_ptr<IRect> _statusRect = nullptr;
             bool _running = false;
             bool _paused = false;
             bool _gameOver = false;

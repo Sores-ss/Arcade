@@ -184,7 +184,7 @@ namespace arcade {
         }
     }
 
-    IRect *SDL2::createRect(Bounds bound) {
+    std::shared_ptr<IRect> SDL2::createRect(Bounds bound) {
         SDL_Rect rect = {
             static_cast<int>(bound.x),
             static_cast<int>(bound.y),
@@ -193,7 +193,7 @@ namespace arcade {
         };
         SDL_Color color = {255, 255, 255, 255};
 
-        return new SDLRect(rect, color, *_renderer);
+        return std::make_shared<SDLRect>(rect, color, *_renderer);
     }
 
     void SDL2::SDLRect::setSize(Size size) {
