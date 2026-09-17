@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include "IDisplayModule.hpp"
+#include "DLLoader.hpp"
 
 namespace arcade {
     class Core {
@@ -18,5 +19,12 @@ namespace arcade {
             ~Core() = default;
             static std::vector<std::string> initLibList(std::string lib);
             const EType getType(const std::string &lib);
+            void run(const std::string &lib);
+        private:
+            std::vector<std::string> _libs;
+            DLLoader<IDisplayModule> _loader;
+            void *_handle = nullptr;
+            IDisplayModule *_display = nullptr;
+            void loadLib(const std::string &path);
     };
 }

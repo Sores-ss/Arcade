@@ -34,6 +34,8 @@ namespace arcade {
             ~SDL2() = default;
             void init(std::string, size_t, size_t) override;
             void stop() override;
+            virtual void render() override;
+            virtual EEvent pollEvent() override;
             const void display(IButton *b) const override;
             const std::string &getName() const override;
             const EType &getType() const override;

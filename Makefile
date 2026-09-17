@@ -25,7 +25,7 @@ graphicals: $(GRAPHICAL_LIB)
 
 $(GRAPHICAL_LIB): $(GRAPHICAL_SRC)
 	mkdir -p lib
-	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC)
+	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC) -lSDL2
 
 clean:
 	rm -f $(OBJ)

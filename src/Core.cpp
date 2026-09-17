@@ -38,4 +38,26 @@ namespace arcade {
         }
         return newMap;
     }
+
+    void Core::run(const std::string &lib)
+    {
+        _libs = initLibList(lib);
+        loadLib(lib);
+        bool running = true;
+        while (running) {
+            EEvent event = _display->pollEvent();
+            if (event == EEvent::QUIT || event == EEvent::ESCAPE)
+                running = false;
+            _display->render();
+        }
+        _display->stop();
+        _loader.close(_handle);
+    }
+
+    void Core::loadLib(const std::string &path)
+    {
+        _handle = _loader.open(path);
+        _display = _loader.getInstance(_handle);
+        _display->init("SDL2", 1920, 1080);
+    }
 }

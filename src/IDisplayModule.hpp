@@ -16,12 +16,25 @@ namespace arcade {
         GAME
     };
 
+    enum EEvent {
+        UNDEFINED,
+        QUIT,
+        ESCAPE,
+        UP,
+        DOWN,
+        RIGHT,
+        LEFT,
+        ENTER
+    };
+
     class IDisplayModule {
         public :
             IDisplayModule() = default;
             virtual ~IDisplayModule() = default;
             virtual void init(std::string, size_t, size_t) = 0;
             virtual void stop() = 0;
+            virtual void render() = 0;
+            virtual EEvent pollEvent() = 0;
             virtual const std::string &getName() const = 0;
             virtual const EType &getType() const = 0;
             virtual const void display(IButton *b) const = 0;

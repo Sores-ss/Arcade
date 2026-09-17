@@ -17,9 +17,8 @@ int main(int argc, char **argv)
         return 84;
     }
     try {
-        std::vector<std::string> libraries = arcade::Core::initLibList(argv[1]);
-        for (const std::string &lib : libraries)
-            std::cout << lib << std::endl;
+        arcade::Core core;
+        core.run(argv[1]);
     } catch(const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 84;

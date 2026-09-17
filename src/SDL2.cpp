@@ -113,4 +113,23 @@ namespace arcade {
     {
         (void)text;
     }
+
+    void SDL2::render()
+    {
+        SDL_RenderPresent(_renderer);
+    }
+
+    EEvent SDL2::pollEvent()
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                return EEvent::QUIT;
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE)
+                    return EEvent::ESCAPE;
+            }
+        }
+        return EEvent::UNDEFINED;
+    }
 }
