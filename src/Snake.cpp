@@ -8,6 +8,8 @@
 #include "Snake.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
+#include <ctime>
 #include <thread>
 
 __attribute__((constructor)) void create(void)
@@ -60,12 +62,12 @@ namespace arcade {
         return false;
     }
 
-    std::size_t Snake::getIndex(const Cell &cell) const
+    std::size_t Snake::getIndex(const Size &cell) const
     {
-        return cell.y * _mapWidth + cell.x;
+        return cell.h * _mapWidth + cell.w;
     }
 
-    bool Snake::isOnSnake(const Cell &cell, std::size_t ignoreTail) const
+    bool Snake::isOnSnake(const Size &cell, std::size_t ignoreTail) const
     {
         if (_snake.empty())
             return false;
@@ -74,7 +76,7 @@ namespace arcade {
             ignoreTail = limit;
         limit -= ignoreTail;
         for (std::size_t i = 0; i < limit; ++i) {
-            if (_snake[i].x == cell.x && _snake[i].y == cell.y)
+            if (_snake[i].w == cell.w && _snake[i].h == cell.h)
                 return true;
         }
         return false;
@@ -82,11 +84,11 @@ namespace arcade {
 
     void Snake::spawnFood()
     {
-        std::vector<Cell> freeCells;
+        std::vector<Size> freeCells;
 
         for (std::size_t y = 0; y < _mapHeight; ++y) {
             for (std::size_t x = 0; x < _mapWidth; ++x) {
-                Cell cell = {x, y};
+                Size cell = {x, y};
                 if (!isOnSnake(cell, 0))
                     freeCells.push_back(cell);
             }
@@ -96,8 +98,8 @@ namespace arcade {
             updateStatusText("YOU WIN - ENTER");
             return;
         }
-        std::uniform_int_distribution<std::size_t> pick(0, freeCells.size() - 1);
-        _food = freeCells[pick(_rng)];
+        std::size_t pick = static_cast<std::size_t>(std::rand()) % freeCells.size();
+        _food = freeCells[pick];
     }
 
     void Snake::updateScoreText()
@@ -202,36 +204,36 @@ namespace arcade {
 
     void Snake::updateGame()
     {
-        Cell nextHead = _snake.front();
+        Size nextHead = _snake.front();
         bool grows = false;
 
         _direction = _nextDirection;
         if (_direction == DIR_UP) {
-            if (nextHead.y == 0) {
+            if (nextHead.h == 0) {
                 _gameOver = true;
                 updateStatusText("GAME OVER - ENTER");
                 return;
             }
-            nextHead.y--;
+            nextHead.h--;
         }
         if (_direction == DIR_DOWN)
-            nextHead.y++;
+            nextHead.h++;
         if (_direction == DIR_LEFT) {
-            if (nextHead.x == 0) {
+            if (nextHead.w == 0) {
                 _gameOver = true;
                 updateStatusText("GAME OVER - ENTER");
                 return;
             }
-            nextHead.x--;
+            nextHead.w--;
         }
         if (_direction == DIR_RIGHT)
-            nextHead.x++;
-        if (nextHead.x >= _mapWidth || nextHead.y >= _mapHeight) {
+            nextHead.w++;
+        if (nextHead.w >= _mapWidth || nextHead.h >= _mapHeight) {
             _gameOver = true;
             updateStatusText("GAME OVER - ENTER");
             return;
         }
-        if (nextHead.x == _food.x && nextHead.y == _food.y)
+        if (nextHead.w == _food.w && nextHead.h == _food.h)
             grows = true;
         if (isOnSnake(nextHead, grows ? 0 : 1)) {
             _gameOver = true;
@@ -271,7 +273,7 @@ namespace arcade {
         if (display == nullptr)
             return;
         _display = display;
-        _rng.seed(std::random_device {}());
+        std::srand(std::time(nullptr));
         _running = true;
         initBoard();
         resetGame();
