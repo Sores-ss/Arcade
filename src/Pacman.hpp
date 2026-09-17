@@ -33,6 +33,7 @@ namespace arcade {
             void movePacman();
             IRect *_rectBase;
             IRect *_rectScore;
+            IRect *_rectWord;
             IRect *_pacman;
             struct Tile {
                 IRect *rect;
@@ -79,5 +80,8 @@ namespace arcade {
             };
             std::vector<std::vector<IRect *>> _gumMap;
             bool _paused = false;
+            std::string _state = "RUNNING";
+            std::string _pacmanDirection = "./assets/pacman_right.png";
+            void changePacman();
     };
 }

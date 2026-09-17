@@ -43,9 +43,12 @@ namespace arcade {
         _rectBounds.x = (_windowSize.w - _rectBounds.w) / 2 + 20;
         _rectBounds.y = (_windowSize.h - _rectBounds.h) / 2 - 50;
         Bounds scoreBounds = {150, 50, _rectBounds.x, 0};
+        Bounds runningBounds = {180, 50, _rectBounds.x + _rectBounds.w - 180, 0};
         scoreBounds.y = (_rectBounds.y > scoreBounds.h + 20) ? _rectBounds.y - scoreBounds.h - 20 : 20;
+        runningBounds.y = scoreBounds.y;
         _rectBase = display->createRect(_rectBounds);
         _rectScore = display->createRect(scoreBounds);
+        _rectWord = display->createRect(runningBounds);
         _gumMap.resize(MAP_HEIGHT, std::vector<IRect *>(MAP_WIDTH, nullptr));
         for (size_t i = 0; i < map.size(); i++) {
             for (size_t j = 0; j < map[i].size(); j++) {
@@ -92,8 +95,10 @@ namespace arcade {
         display->setBackground({"./assets/pacman_background.jpg", 0, 0, 0, 0});
         _rectBase->setTexture({"", 0, 0, 0, 0});
         _rectScore->setTexture({"", 0, 0, 0, 0});
+        _rectWord->setTexture({"", 0, 0, 0, 0});
         std::string scoreValue = std::to_string(_score);
         _rectScore->setText(std::string ("score: ") + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
+        _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
     }
 
     void Pacman::displayPacman(IDisplayModule *display)
@@ -104,7 +109,7 @@ namespace arcade {
         if (!_pacman)
             return;
         _lastMove = std::chrono::steady_clock::now();
-        _pacman->setTexture({"./assets/pacman.png", 240, 228, 0, 0});
+        _pacman->setTexture({_pacmanDirection, 240, 228, 0, 0});
         _map.push_back({_pacman, true});
     }
 
@@ -162,6 +167,19 @@ namespace arcade {
         }
     }
 
+    void Pacman::changePacman()
+    {
+        if (_dirX == 1)
+            _pacmanDirection = "./assets/pacman_right.png";
+        if (_dirX == -1)
+            _pacmanDirection = "./assets/pacman_left.png";
+        if (_dirY == 1)
+            _pacmanDirection = "./assets/pacman_bot.png";
+        if (_dirY == -1)
+            _pacmanDirection = "./assets/pacman_top.png";
+        _pacman->setTexture({_pacmanDirection, 240, 228, 0, 0});
+    }
+
     void Pacman::run(IDisplayModule *display)
     {
         bool running = true;
@@ -173,16 +191,20 @@ namespace arcade {
             if (event == EEvent::QUIT || event == EEvent::ESCAPE)
                 running = false;
             updateDirection(event);
-            if (!_paused)
+            if (!_paused) {
+                changePacman();
                 movePacman();
+            }
             std::string scoreValue = std::to_string(_score);
             _rectScore->setText("score: " + scoreValue, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
+            _rectWord->setText(_state, {"./assets/Pixellettersfull-BnJ5.ttf", 255, 255, 255, 0});
             display->clearWindow();
             _rectBase->display();
             for (auto &mapRect : _map)
                 if (mapRect.visible)
                     mapRect.rect->display();
             _rectScore->display();
+            _rectWord->display();
             display->render();
         }
     }
@@ -190,6 +212,10 @@ namespace arcade {
     void Pacman::pause()
     {
         _paused = !_paused;
+        if (_paused)
+            _state = "PAUSED";
+        else
+            _state = "RUNNING";
         std::cout << "pacman paused" << std::endl;
     }
 
