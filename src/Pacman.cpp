@@ -357,14 +357,15 @@ namespace arcade {
                 _ghosts[i].texture = textures[i];
                 _ghosts[i].dirX = 0;
                 _ghosts[i].dirY = -1;
-            } else if (_ghosts[i].texture.empty())
+            } else if (_ghosts[i].texture.empty()) {
                 _ghosts[i].texture = textures[i];
+            }
             _ghosts[i].rect = display->createRect({_tileSize, _tileSize, _rectBounds.x + _ghosts[i].x * _tileSize, _rectBounds.y + _ghosts[i].y * _tileSize});
             if (_ghosts[i].rect) {
                 if (_superSonic)
-                    _ghosts[i].rect->setTexture({"./assets/blue_eat_pacman.png", 221, 0, 221, 255});
+                    _ghosts[i].rect->setTexture({"./assets/blue_eat_pacman.png", 255, 255, 255, 0});
                 else
-                    _ghosts[i].rect->setTexture({_ghosts[i].texture, 255, 255, 255, 255});
+                    _ghosts[i].rect->setTexture({_ghosts[i].texture, 255, 255, 255, 0});
                 _map.push_back({_ghosts[i].rect, true});
             }
         }
@@ -475,7 +476,7 @@ namespace arcade {
                 _rectBounds.y + ghost.y * _tileSize
             });
             if (_superSonic) {
-                ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 221, 0, 221, 0});
+                ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 255, 255, 255, 0});
                 if (std::chrono::duration_cast<std::chrono::seconds>(now - _superSonicStart).count() >= 10) {
                     std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
                     for (int i = 0; i < 4; i++)
