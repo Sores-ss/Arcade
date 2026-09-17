@@ -7,15 +7,16 @@
 
 #pragma once
 
-#include "IDisplayModule.hpp"
-#include <map>
+#include <vector>
 #include <iostream>
+#include "IDisplayModule.hpp"
 
 namespace arcade {
     class Core {
         public:
             Core() = default;
             ~Core() = default;
-            static std::map<arcade::EType, std::string> initLibList();
+            static std::vector<std::string> initLibList(std::string lib);
+            const EType getType(const std::string &lib);
     };
 }

@@ -8,20 +8,12 @@
 #pragma once
 
 #include <iostream>
+#include "IButton.hpp"
 
 namespace arcade {
     enum EType {
-        Graphical,
-        Game
-    };
-
-    class IButton {
-        public:
-            IButton() = default;
-            virtual ~IButton() = default;
-            virtual bool is_clicked() const = 0;
-            virtual bool is_selected() const = 0;
-            virtual void setText(std::string text) const = 0;
+        GRAPHICAL,
+        GAME
     };
 
     class IDisplayModule {

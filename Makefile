@@ -5,17 +5,27 @@
 ## Makefile
 ##
 
-SRC = 	j./src/main.cpp \
-		j./src/Core.cpp \
+SRC = 	main.cpp \
+		src/Core.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 
 NAME = arcade
+GRAPHICAL_LIB = lib/arcade_sdl2.so
+GRAPHICAL_SRC = src/SDL2.cpp
 
-all: $(NAME)
+CXXFLAGS += -Isrc
+
+core: $(NAME)
 
 $(NAME): $(OBJ)
-	g++ -o $(NAME) $(OBJ)
+	g++ -o $(NAME) $(OBJ) $(CXXFLAGS)
+
+graphicals: $(GRAPHICAL_LIB)
+
+$(GRAPHICAL_LIB): $(GRAPHICAL_SRC)
+	mkdir -p lib
+	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC)
 
 clean:
 	rm -f $(OBJ)
@@ -23,4 +33,4 @@ clean:
 fclean: clean
 	rm -f $(NAME)
 
-re: fclean all
+re: fclean core
