@@ -253,9 +253,22 @@ namespace arcade {
     {
         if (_textTexture)
             SDL_DestroyTexture(_textTexture);
-        TTF_Font* font = TTF_OpenFont(texture.filepath.c_str(), 24);
+        _textTexture = nullptr;
+        if (text.empty()) {
+            _textRect = {0, 0, 0, 0};
+            return;
+        }
+        TTF_Font *font = nullptr;
+        if (!texture.filepath.empty())
+            font = TTF_OpenFont(texture.filepath.c_str(), 24);
+        if (!font)
+            font = TTF_OpenFont("./assets/Pixellettersfull-BnJ5.ttf", 24);
         if (!font) {
-            std::cerr << "Erreur font: " << TTF_GetError() << std::endl;
+            static bool fontErrorPrinted = false;
+            if (!fontErrorPrinted) {
+                std::cerr << "Erreur font: " << TTF_GetError() << std::endl;
+                fontErrorPrinted = true;
+            }
             return;
         }
 
