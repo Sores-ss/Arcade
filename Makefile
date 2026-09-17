@@ -15,10 +15,8 @@ GRAPHICAL_LIB = lib/arcade_sdl2.so
 GRAPHICAL_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf
 GRAPHICAL_SRC = src/SDL2.cpp
 
-SNAKE_LIB = lib/arcade_snake.so
-SNAKE_SRC = src/Snake.cpp
-PACMAN_LIB = lib/arcade_pacman.so
-PACMAN_SRC = src/Pacman.cpp
+GAME_LIB = lib/arcade_snake.so
+GAME_SRC = src/Snake.cpp
 
 CXXFLAGS += -Isrc
 
@@ -35,19 +33,16 @@ $(GRAPHICAL_LIB): $(GRAPHICAL_SRC)
 	mkdir -p lib
 	g++ -shared -fPIC $(CXXFLAGS) -o $(GRAPHICAL_LIB) $(GRAPHICAL_SRC) $(GRAPHICAL_FLAGS)
 
-games: $(SNAKE_LIB) $(PACMAN_LIB)
+games: $(GAME_LIB)
 
-$(SNAKE_LIB): $(SNAKE_SRC)
+$(GAME_LIB): $(GAME_SRC)
 	mkdir -p lib
-	g++ -shared -fPIC $(CXXFLAGS) -o $(SNAKE_LIB) $(SNAKE_SRC)
+	g++ -shared -fPIC $(CXXFLAGS) -o $(GAME_LIB) $(GAME_SRC)
 
-$(PACMAN_LIB): $(PACMAN_SRC)
-	mkdir -p lib
-	g++ -shared -fPIC $(CXXFLAGS) -o $(PACMAN_LIB) $(PACMAN_SRC)
 clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME) $(GRAPHICAL_LIB) $(SNAKE_LIB) $(PACMAN_LIB)
+	rm -f $(NAME) $(GRAPHICAL_LIB) $(GAME_LIB)
 
 re: fclean core graphicals games
