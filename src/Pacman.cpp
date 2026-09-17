@@ -44,6 +44,18 @@ namespace arcade {
         }
         _map.clear();
         _gumMap.clear();
+        if (_rectBase != nullptr)
+            delete _rectBase;
+        if (_rectScore != nullptr)
+            delete _rectScore;
+        if (_rectWord != nullptr)
+            delete _rectWord;
+        _rectBase = nullptr;
+        _rectScore = nullptr;
+        _rectWord = nullptr;
+        _pacman = nullptr;
+        for (auto &ghost : _ghosts)
+            ghost.rect = nullptr;
         map = _initialMap;
         _score = 0;
         _pacmanStartX = 13;
@@ -307,13 +319,14 @@ namespace arcade {
 
     void Pacman::displayGhosts(IDisplayModule *display)
     {
-        std::array<std::pair<int,int>, 4> startPositions = {{{12, 14}, {13, 14}, {14, 14}, {15, 14}}};
         std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
+        auto now = std::chrono::steady_clock::now();
 
         for (int i = 0; i < 4; i++) {
-            _ghosts[i].x = startPositions[i].first;
-            _ghosts[i].y = startPositions[i].second;
+            _ghosts[i].x = _startPositions[i].first;
+            _ghosts[i].y = _startPositions[i].second;
             _ghosts[i].inCage = true;
+            _ghosts[i].cageReleaseTime = now + std::chrono::seconds(10);
             _ghosts[i].texture = textures[i];
             _ghosts[i].dirX = 0;
             _ghosts[i].dirY = -1;
@@ -323,7 +336,7 @@ namespace arcade {
                 _map.push_back({_ghosts[i].rect, true});
             }
         }
-        _ghostCageStart = std::chrono::steady_clock::now();
+        _ghostCageStart = now;
     }
 
     bool Pacman::isWalkableTile(int x, int y) const
@@ -365,12 +378,28 @@ namespace arcade {
                 _ghosts[i].x = movePositions[i].first;
                 _ghosts[i].y = movePositions[i].second;
                 _ghosts[i].inCage = false;
+                _ghosts[i].cageReleaseTime = now;
             }
             _initGhostPosition = true;
         }
         const std::array<std::pair<int,int>, 4> dirs = {{{0, -1}, {1, 0}, {-1, 0}, {0, 1}}};
         for (size_t i = 0; i < _ghosts.size(); i++) {
             Ghost &ghost = _ghosts[i];
+            if (ghost.inCage && now < ghost.cageReleaseTime) {
+                ghost.rect->setPosition({
+                    _rectBounds.x + ghost.x * _tileSize,
+                    _rectBounds.y + ghost.y * _tileSize
+                });
+                continue;
+            }
+            if (ghost.inCage && now >= ghost.cageReleaseTime) {
+                ghost.x = movePositions[i].first;
+                ghost.y = movePositions[i].second;
+                ghost.inCage = false;
+                ghost.dirX = 0;
+                ghost.dirY = -1;
+            }
+
             int nextX = ghost.x + ghost.dirX;
             int nextY = ghost.y + ghost.dirY;
             if (canGhostMoveTo(i, nextX, nextY)) {
@@ -414,7 +443,6 @@ namespace arcade {
             });
             if (_superSonic) {
                 ghost.rect->setTexture({"./assets/blue_eat_pacman.png", 255, 255, 255, 0});
-                auto now = std::chrono::steady_clock::now();
                 if (std::chrono::duration_cast<std::chrono::seconds>(now - _superSonicStart).count() >= 10) {
                     std::array<std::string, 4> textures = {"./assets/red_ghost.png", "./assets/pink_ghost.png", "./assets/blue_ghost.png", "./assets/yellow_ghost.png"};
                     for (int i = 0; i < 4; i++)
@@ -424,6 +452,17 @@ namespace arcade {
                 if (ghost.x == (int)_pacmanStartX && ghost.y == (int)_pacmanStartY) {
                     _score += 200 * _superSonic;
                     _superSonic++;
+                    ghost.x = _startPositions[i].first;
+                    ghost.y = _startPositions[i].second;
+                    ghost.inCage = true;
+                    ghost.cageReleaseTime = now + std::chrono::seconds(5);
+                    ghost.dirX = 0;
+                    ghost.dirY = -1;
+                    ghost.rect->setTexture({ghost.texture, 255, 255, 255, 0});
+                    ghost.rect->setPosition({
+                        _rectBounds.x + ghost.x * _tileSize,
+                        _rectBounds.y + ghost.y * _tileSize
+                    });
                     continue;
                 }
             }

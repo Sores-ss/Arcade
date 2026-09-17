@@ -104,6 +104,7 @@ namespace arcade {
                 int dirX = 1;
                 int dirY = 0;
                 bool inCage = true;
+                std::chrono::steady_clock::time_point cageReleaseTime;
                 std::string texture;
             };
             std::array<Ghost, 4> _ghosts;
@@ -118,5 +119,6 @@ namespace arcade {
             int _ghostSpeed = 200;
             std::chrono::steady_clock::time_point _superSonicStart;
             size_t _tileSize = 15;
+            std::array<std::pair<int,int>, 4> _startPositions = {{{12, 14}, {13, 14}, {14, 14}, {15, 14}}};
     };
 }
