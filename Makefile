@@ -5,7 +5,8 @@
 ## Makefile
 ##
 
-SRC = ./src/arcade.cpp \
+SRC = 	j./src/main.cpp \
+		j./src/Core.cpp \
 
 OBJ = $(SRC:.cpp=.o)
 
