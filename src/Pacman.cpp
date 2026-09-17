@@ -1,0 +1,86 @@
+/*
+** EPITECH PROJECT, 2025
+** G-OOP-400-LIL-4-1-arcade-9
+** File description:
+** Pacman.cpp
+*/
+
+#include "Pacman.hpp"
+
+__attribute__((constructor)) void create(void)
+{
+    std::cout << "Opening pacman..." << std::endl;
+}
+
+__attribute__((destructor)) void destroy(void)
+{
+    std::cout << "Closing pacman..." << std::endl;
+}
+
+extern "C" {
+    arcade::Pacman *myEntryPoint(void)
+    {
+        std::cout << "Loading pacman.." << std::endl;
+        return new arcade::Pacman();
+    }
+
+    const arcade::EType getLibType(void)
+    {
+        return arcade::EType::GAME;
+    }
+
+    const std::string getLibName(void)
+    {
+        return "Pacman";
+    }
+}
+
+namespace arcade {
+    void Pacman::run(IDisplayModule *display)
+    {
+        const std::size_t rectSize = 50;
+        const std::size_t mapWidth = 10;
+        const std::size_t mapHeight = 10;
+        Size windowSize = display->getWindowSize();
+        const std::size_t gridWidth = mapWidth * rectSize;
+        const std::size_t gridHeight = mapHeight * rectSize;
+        const std::size_t mapX = (windowSize.w - gridWidth) / 2;
+        const std::size_t mapY = (windowSize.h - gridHeight) / 2;
+        bool mapInit = false;
+        bool running = true;
+
+        if (!mapInit) {
+            for (std::size_t i = 0; i < mapHeight; i++) {
+                for (std::size_t j = 0; j < mapWidth; j++) {
+                    IRect *tile = display->createRect({rectSize, rectSize, mapX + i * rectSize,
+                        mapY + j * rectSize});
+                    if ((i + j) % 2 == 0)
+                        display->setTexture(*tile, {"", 10, 150, 40, 255});
+                    else
+                        display->setTexture(*tile, {"", 35, 180, 55, 255});
+                    _tiles.push_back(tile);
+                }
+            }
+            mapInit = true;
+        }
+        while (running) {
+            EEvent event = display->pollEvent();
+            if (event == EEvent::QUIT || event == EEvent::ESCAPE)
+                running = false;
+            display->clearWindow();
+            for (IRect *tile : _tiles)
+                display->displayRect(*tile);
+            display->render();
+        }
+    }
+
+    void Pacman::pause()
+    {
+        std::cout << "pacman paused" << std::endl;
+    }
+
+    void Pacman::stop()
+    {
+        std::cout << "pacman stopped" << std::endl;
+    }
+}
