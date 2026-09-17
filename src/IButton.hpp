@@ -12,8 +12,7 @@ namespace arcade {
         public:
             IButton() = default;
             virtual ~IButton() = default;
-            virtual bool is_clicked() const = 0;
-            virtual bool is_selected() const = 0;
+            virtual bool isMouseOver() const = 0;
             virtual void setText(std::string text) const = 0;
     };
 }
