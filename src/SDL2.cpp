@@ -9,9 +9,7 @@
 #include "Exception.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
-#include <algorithm>
 
 
 __attribute__((constructor)) void create(void)
@@ -43,17 +41,15 @@ extern "C" {
 }
 
 namespace arcade {
-    void SDL2::init(std::string name, Size size) {
+    void SDL2::init(std::string name, size_t width, size_t height) {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
         IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
         TTF_Init();
-
-        _windowSize = {size.w, size.h};
         SDL_Window* window = SDL_CreateWindow(
             name.c_str(),
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
-            size.w, size.h,
+            width, height,
             SDL_WINDOW_SHOWN
         );
         if (!window) {
@@ -76,38 +72,10 @@ namespace arcade {
         _renderer = renderer;
     }
 
-    void SDL2::setBorder(IRect &rect, Texture texture)
-    {
-        SDLRect *sdlrect = dynamic_cast<SDLRect *>(&rect);
-        if (!sdlrect)
-            return;
-        sdlrect->setBorderRect(sdlrect->getRect());
-        if (texture.filepath != "") {
-            SDL_Surface *surface = IMG_Load(texture.filepath.c_str());
-            if (!surface) {
-                std::cerr << "Erreur IMG_Load: " << IMG_GetError() << std::endl;
-                return;
-            }
-            SDL_Texture* surf_texture = SDL_CreateTextureFromSurface(_renderer, surface);
-            SDL_FreeSurface(surface);
-
-            if (!surf_texture) {
-                std::cerr << "Erreur texture: " << SDL_GetError() << std::endl;
-                return;
-            }
-            sdlrect->setBorderTexture(surf_texture);
-            _textures.push_back(surf_texture);
-        } else {
-            sdlrect->setBorderColor((SDL_Color){texture.r, texture.g, texture.b, texture.a});
-        }
-    }
-
     void SDL2::stop() {
         if (!_textures.empty())
             for (auto texture : _textures)
                 SDL_DestroyTexture(texture);
-        if (_music)
-            Mix_FreeMusic(_music);
         if (_renderer)
             SDL_DestroyRenderer(_renderer);
         if (_window)
@@ -117,44 +85,17 @@ namespace arcade {
         SDL_Quit();
     }
 
-    void SDL2::setMusic(std::string filepath) {
-        if (_music) {
-            Mix_FreeMusic(_music);
-            _music = nullptr;
-        }
-        Mix_Music* music = Mix_LoadMUS(filepath.c_str());
-
-        if (!music) {
-            std::cout << "Error loading music" << std::endl;
-            return;
-        }
-        _music = music;
-        Mix_PlayMusic(music, -1);
-    }
-
-    void SDL2::playSound(std::string filepath) const {
-        Mix_Chunk *sound = Mix_LoadWAV(filepath.c_str());
-
-        if (!sound) {
-            std::cout << "Error loading sound" << std::endl;
-            return;
-        }
-
-        Mix_PlayChannel(-1, sound, 0);
-        Mix_FreeChunk(sound);
-    }
-
-    const EType SDL2::getType() const {
+    const EType &SDL2::getType() const {
         return _type;
     }
 
-    const std::string SDL2::getName() const {
+    const std::string &SDL2::getName() const {
         static const std::string name = "SDL2";
         return name;
     }
 
-    void SDL2::displayRect(IRect &r) const {
-        SDL2::SDLRect *rectObj = dynamic_cast<SDL2::SDLRect *>(&r);
+    void SDL2::displayRect(IRect *r) const {
+        SDL2::SDLRect *rectObj = dynamic_cast<SDL2::SDLRect *>(r);
 
         if (!rectObj || !_renderer)
             return;
@@ -172,39 +113,22 @@ namespace arcade {
         if (rectObj->getTextTexture()) {
             SDL_RenderCopy(_renderer, rectObj->getTextTexture(), NULL, &rectObj->getTextRect());
         }
-        if (rectObj->hasBorder()) {
-            if (rectObj->getBorderTexture())
-                SDL_RenderCopy(_renderer, rectObj->getBorderTexture(), NULL, &rectObj->getBorder());
-            else {
-                SDL_SetRenderDrawColor(_renderer,
-                    rectObj->getBorderColor().r,
-                    rectObj->getBorderColor().g,
-                    rectObj->getBorderColor().b,
-                    rectObj->getBorderColor().a);
-                SDL_RenderDrawRect(_renderer, &rectObj->getBorder());
-            }
-        }
     }
 
-    IRect *SDL2::createRect(Bounds bound) {
+    IRect *SDL2::createRect(size_t width, size_t height, size_t x, size_t y) {
         SDL_Rect rect = {
-            static_cast<int>(bound.x),
-            static_cast<int>(bound.y),
-            static_cast<int>(bound.w),
-            static_cast<int>(bound.h)
+            static_cast<int>(x),
+            static_cast<int>(y),
+            static_cast<int>(width),
+            static_cast<int>(height)
         };
         SDL_Color color = {255, 255, 255, 255};
 
         return new SDLRect(rect, color);
     }
 
-    void SDL2::SDLRect::setSize(Size size) {
-        _rect.h = size.h;
-        _rect.w = size.w;
-    }
-
-    Bounds SDL2::SDLRect::getBounds() const {
-        return {{static_cast<std::size_t>(_rect.x), static_cast<std::size_t>(_rect.y)}, {static_cast<std::size_t>(_rect.w), static_cast<std::size_t>(_rect.h)}};
+    rectInfo_t SDL2::SDLRect::getRectInfo() const {
+        return {static_cast<std::size_t>(_rect.x), static_cast<std::size_t>(_rect.y), static_cast<std::size_t>(_rect.w), static_cast<std::size_t>(_rect.h)};
     }
 
     bool SDL2::SDLRect::isMouseOver() const
@@ -217,38 +141,15 @@ namespace arcade {
             && mouseY >= _rect.y && mouseY < _rect.y + _rect.h;
     }
 
-    void SDL2::SDLRect::setPosition(Position pos)
+    void SDL2::SDLRect::setPosition(size_t x, size_t y)
     {
-        _rect.x = pos.x;
-        _rect.y = pos.y;
+        _rect.x = x;
+        _rect.y = y;
         _textRect.x = _rect.x + (_rect.w - _textRect.w) / 2;
         _textRect.y = _rect.y + (_rect.h - _textRect.h) / 2;
-        _border.x = pos.x;
-        _border.y = pos.y;
     }
 
-    void SDL2::setBackground(Texture texture)
-    {
-        if (texture.filepath != "") {
-        SDL_Surface* surface = IMG_Load(texture.filepath.c_str());
-        if (!surface) {
-            std::cout << "Erreur chargement image: " << IMG_GetError() << std::endl;
-            return;
-        }
-
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
-        if (!texture) {
-            std::cout << "Erreur création texture: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(surface);
-            return;
-        }
-        SDL_FreeSurface(surface);
-        _background = texture;
-        _textures.push_back(texture);
-        }
-    }
-
-    void SDL2::setText(IRect &rectObj, std::string text, Texture texture)
+    void SDL2::setText(IRect *rectObj, std::string text, Texture_t texture)
     {
         TTF_Font* font = TTF_OpenFont(texture.filepath.c_str(), 24);
         if (!font) {
@@ -259,41 +160,25 @@ namespace arcade {
         SDL_Color color = {255, 255, 255, 255};
 
         SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), color);
-        if (!textSurface) {
-            std::cerr << "Erreur rendu texte: " << TTF_GetError() << std::endl;
-            TTF_CloseFont(font);
-            return;
-        }
 
         SDL_Texture* textTexture = SDL_CreateTextureFromSurface(_renderer, textSurface);
         SDL_Rect textRect;
+        textRect.w = textSurface->w * 3;
+        textRect.h = textSurface->h * 3;
 
-        SDLRect *sdlRect = dynamic_cast<SDLRect *>(&rectObj);
-        if (!sdlRect) {
-            SDL_FreeSurface(textSurface);
-            TTF_CloseFont(font);
+        SDLRect *sdlRect = dynamic_cast<SDLRect *>(rectObj);
+        if (!sdlRect)
             return;
-        }
         SDL_Rect rect = sdlRect->getRect();
-
-        const float maxWidth = static_cast<float>(rect.w) * 0.85f;
-        const float maxHeight = static_cast<float>(rect.h) * 0.85f;
-        const float scaleX = maxWidth / static_cast<float>(textSurface->w);
-        const float scaleY = maxHeight / static_cast<float>(textSurface->h);
-        const float scale = std::min(scaleX, scaleY);
-
-        textRect.w = static_cast<int>(textSurface->w * scale);
-        textRect.h = static_cast<int>(textSurface->h * scale);
         textRect.x = rect.x + (rect.w - textRect.w) / 2;
         textRect.y = rect.y + (rect.h - textRect.h) / 2;
         SDL_FreeSurface(textSurface);
-        TTF_CloseFont(font);
         sdlRect->setTextRect(textRect);
         sdlRect->setTextTexture(textTexture);
         _textures.push_back(textTexture);
     }
 
-    void SDL2::setTexture(IRect &rect, Texture texture)
+    void SDL2::setTexture(IRect *rect, Texture_t texture)
     {
         if (texture.filepath != "") {
             SDL_Surface *surface = IMG_Load(texture.filepath.c_str());
@@ -308,25 +193,23 @@ namespace arcade {
                 std::cerr << "Erreur texture: " << SDL_GetError() << std::endl;
                 return;
             }
-            SDLRect *sdl_rect = dynamic_cast<SDLRect *>(&rect);
+            SDLRect *sdl_rect = dynamic_cast<SDLRect *>(rect);
             if (!sdl_rect)
                 return;
             sdl_rect->setTexture(surf_texture);
             _textures.push_back(surf_texture);
         } else {
-            SDLRect *sdl_rect = dynamic_cast<SDLRect *>(&rect);
+            SDLRect *sdl_rect = dynamic_cast<SDLRect *>(rect);
             if (!sdl_rect)
                 return;
             sdl_rect->setColor((SDL_Color){texture.r, texture.g, texture.b, texture.a});
         }
     }
 
-    void SDL2::clearWindow() const
+    void SDL2::clear() const
     {
-        SDL_SetRenderDrawColor(_renderer, _backgroundColor.r, _backgroundColor.g, _backgroundColor.b, _backgroundColor.a);
+        SDL_SetRenderDrawColor(_renderer, 30, 30, 30, 255);
         SDL_RenderClear(_renderer);
-        if (_background)
-            SDL_RenderCopy(_renderer, _background, NULL, NULL);
     }
 
     void SDL2::render()
@@ -334,7 +217,7 @@ namespace arcade {
         SDL_RenderPresent(_renderer);
     }
 
-    const EEvent SDL2::pollEvent()
+    EEvent SDL2::pollEvent()
     {
         while (SDL_PollEvent(&_event)) {
             if (_event.type == SDL_QUIT)
@@ -350,8 +233,9 @@ namespace arcade {
                     return EEvent::LEFT;
                 if (_event.key.keysym.sym == SDLK_RIGHT)
                     return EEvent::RIGHT;
-                if (_event.key.keysym.sym == SDLK_RETURN)
+                if (_event.key.keysym.sym == SDLK_RETURN) {
                     return EEvent::ENTER;
+                }
             }
         }
         return EEvent::UNDEFINED;

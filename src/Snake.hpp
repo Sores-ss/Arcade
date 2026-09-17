@@ -5,7 +5,10 @@
 ** Snake.hpp
 */
 
+#pragma once
+
 #include "IGameModule.hpp"
+#include <vector>
 
 namespace arcade {
     class Snake : public IGameModule {
@@ -15,5 +18,7 @@ namespace arcade {
             void run(IDisplayModule *display) override;
             void pause() override;
             void stop() override;
+        private:
+            std::vector<IRect *> _tiles;
     };
 }
