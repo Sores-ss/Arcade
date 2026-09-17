@@ -50,9 +50,8 @@ namespace arcade {
         if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 512) < 0) {
             std::cerr << "Erreur initialisation audio: " << Mix_GetError() << std::endl;
             _audioEnabled = false;
-        }
-
-        _audioEnabled = true;
+        } else
+            _audioEnabled = true;
         _windowSize = {size.w, size.h};
         SDL_Window* window = SDL_CreateWindow(
             name.c_str(),
@@ -107,9 +106,11 @@ namespace arcade {
     }
 
     void SDL2::stop() {
-        if (!_textures.empty())
-            for (auto texture : _textures)
-                SDL_DestroyTexture(texture);
+        if (_background) {
+            SDL_DestroyTexture(_background);
+            _background = nullptr;
+        }
+        _textures.clear();
         for (auto &sound : _sounds)
             Mix_FreeChunk(sound.second);
         _sounds.clear();
@@ -235,6 +236,10 @@ namespace arcade {
 
     void SDL2::setBackground(Texture texture)
     {
+        if (_background) {
+            SDL_DestroyTexture(_background);
+            _background = nullptr;
+        }
         if (texture.filepath != "") {
             SDL_Surface* surface = IMG_Load(texture.filepath.c_str());
             if (!surface) {
@@ -250,9 +255,7 @@ namespace arcade {
             }
             SDL_FreeSurface(surface);
             _background = texture;
-            _textures.push_back(texture);
         } else {
-            _background = nullptr;
             _backgroundColor = {texture.r, texture.g, texture.b, texture.a};
         }
     }
@@ -355,6 +358,12 @@ namespace arcade {
             if (_event.type == SDL_MOUSEBUTTONDOWN)
                 return EEvent::CLICK;
             if (_event.type == SDL_KEYDOWN) {
+                if (_event.key.keysym.sym == SDLK_F1)
+                    return EEvent::F1;
+                if (_event.key.keysym.sym == SDLK_F5)
+                    return EEvent::F5;
+                if (_event.key.keysym.sym == SDLK_DELETE)
+                    return EEvent::SUPPR;
                 if (_event.key.keysym.sym == SDLK_ESCAPE)
                     return EEvent::ESCAPE;
                 if (_event.key.keysym.sym == SDLK_BACKSPACE)

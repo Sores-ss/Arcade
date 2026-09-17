@@ -36,6 +36,18 @@ extern "C" {
 }
 
 namespace arcade {
+    bool Pacman::exit() const
+    {
+        return _exitRequested;
+    }
+
+    bool Pacman::changeGame()
+    {
+        bool change = _changeGame;
+        _changeGame = false;
+        return change;
+    }
+
     bool Pacman::changeDisplay()
     {
         bool change = _changeDisplay;
@@ -63,6 +75,7 @@ namespace arcade {
         _nextDirY = 0;
         _paused = false;
         _changeDisplay = false;
+        _changeGame = false;
         _state = "RUNNING";
         _pacmanDirection = "./assets/pacman_right.png";
         _initGhostPosition = false;
@@ -292,6 +305,8 @@ namespace arcade {
     {
         bool running = true;
         _changeDisplay = false;
+        _changeGame = false;
+        _exitRequested = false;
         if (!_initialized) {
             resetGame(display);
         } else {
@@ -310,10 +325,22 @@ namespace arcade {
         while (running) {
             auto now = std::chrono::steady_clock::now();
             EEvent event = display->pollEvent();
-            if (event == QUIT || event == ESCAPE)
+            if (event == F5)
+                resetGame(display);
+            if (event == QUIT || event == SUPPR) {
+                _exitRequested = true;
+                running = false;
+                continue;
+            }
+            if (event == ESCAPE)
                 running = false;
             if (event == TAB) {
                 _changeDisplay = true;
+                running = false;
+                continue;
+            }
+            if (event == F1) {
+                _changeGame = true;
                 running = false;
                 continue;
             }

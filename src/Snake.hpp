@@ -19,6 +19,8 @@ namespace arcade {
             void run(std::shared_ptr<IDisplayModule> display, const std::string name) override;
             void pause() override;
             bool changeDisplay() override;
+            bool changeGame() override;
+            bool exit() const override;
         private:
             enum Direction {
                 DIR_UP,
@@ -43,6 +45,8 @@ namespace arcade {
             bool _paused = false;
             bool _gameOver = false;
             bool _changeDisplay = false;
+            bool _changeGame = false;
+            bool _exitRequested = false;
             bool _initialized = false;
             int _score = 0;
 

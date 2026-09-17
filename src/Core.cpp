@@ -46,10 +46,27 @@ namespace arcade {
             _currentGamePath = path;
         }
         _game->run(_display, _name);
+        bool wantsExit = _game->exit();
         bool wantsDisplayChange = _game->changeDisplay();
+        bool wantsGameChange = _game->changeGame();
+        if (wantsExit) {
+            _game.reset();
+            _loaderGame.close(_handleGame);
+            _handleGame = nullptr;
+            _currentGamePath.clear();
+            return CORE_EXIT;
+        }
         if (wantsDisplayChange) {
-            std::string nextGraphic = changeDisplay();
+            std::string nextGraphic = changeNewDisplay();
             return nextGraphic;
+        }
+        if (wantsGameChange) {
+            std::string nextGame = changeNewGame();
+            _game.reset();
+            _loaderGame.close(_handleGame);
+            _handleGame = nullptr;
+            _currentGamePath.clear();
+            return nextGame;
         }
         _game.reset();
         _loaderGame.close(_handleGame);
@@ -58,7 +75,7 @@ namespace arcade {
         return "";
     }
 
-    std::string Core::changeDisplay()
+    std::string Core::changeNewDisplay()
     {
         std::vector<std::string> graphicalLibs;
 
@@ -75,6 +92,25 @@ namespace arcade {
             return graphicalLibs.front();
         std::size_t nextIndex = ((std::size_t)(std::distance(graphicalLibs.begin(), current)) + 1) % graphicalLibs.size();
         return graphicalLibs[nextIndex];
+    }
+
+    std::string Core::changeNewGame()
+    {
+        std::vector<std::string> gameLibs;
+
+        for (const auto &lib : _libs) {
+            void *handle = _loaderGame.open(lib);
+            if (_loaderGame.getType(handle) == EType::GAME)
+                gameLibs.push_back(lib);
+            _loaderGame.close(handle);
+        }
+        if (gameLibs.size() < 2)
+            return "";
+        auto current = std::find(gameLibs.begin(), gameLibs.end(), _currentGamePath);
+        if (current == gameLibs.end())
+            return gameLibs.front();
+        std::size_t nextIndex = ((std::size_t)(std::distance(gameLibs.begin(), current)) + 1) % gameLibs.size();
+        return gameLibs[nextIndex];
     }
 
     std::string Core::runlib(IRect &selector, bool &running)
@@ -117,11 +153,11 @@ namespace arcade {
         bool selecting = true;
         while (selecting) {
             EEvent event = _display->pollEvent();
-            if (event == EEvent::QUIT) {
+            if (event == QUIT || event == SUPPR || event == ESCAPE) {
                 selecting = false;
                 running = false;
             }
-            if (event == EEvent::ESCAPE) {
+            if (event == ESCAPE) {
                 selecting = false;
             }
             if (event == EEvent::UP && !positions.empty()) {
@@ -138,7 +174,7 @@ namespace arcade {
                 selecting = false;
             }
             if (event == EEvent::TAB) {
-                std::string nextGraphic = changeDisplay();
+                std::string nextGraphic = changeNewDisplay();
                 if (!nextGraphic.empty()) {
                     selectedLib = nextGraphic;
                     selecting = false;
@@ -195,7 +231,7 @@ namespace arcade {
         bool selecting = true;
         while (selecting) {
             EEvent event = _display->pollEvent();
-            if (event == EEvent::QUIT) {
+            if (event == EEvent::QUIT || event == SUPPR || event == ESCAPE) {
                 selecting = false;
                 running = false;
             }
@@ -214,15 +250,44 @@ namespace arcade {
                 _display->setBackground({"", 50, 50, 50, 255});
                 std::string selectedGame = gameLibs.at(selected);
                 selectedGraphic = loadGame(selectedGame);
+                if (selectedGraphic == CORE_EXIT) {
+                    running = false;
+                    selecting = false;
+                    continue;
+                }
                 while (!selectedGraphic.empty()) {
+                    if (std::find(gameLibs.begin(), gameLibs.end(), selectedGraphic) != gameLibs.end()) {
+                        selectedGame = selectedGraphic;
+                        _display->setBackground({"", 50, 50, 50, 255});
+                        selectedGraphic = loadGame(selectedGame);
+                        if (selectedGraphic == CORE_EXIT) {
+                            running = false;
+                            selecting = false;
+                            break;
+                        }
+                        continue;
+                    }
                     loadGraphic(selectedGraphic);
                     _display->setBackground({"", 50, 50, 50, 255});
                     selectedGraphic = loadGame(selectedGame);
+                    if (selectedGraphic == CORE_EXIT) {
+                        running = false;
+                        selecting = false;
+                        break;
+                    }
                 }
+                if (!running)
+                    continue;
                 selecting = false;
             }
+            if (event == F1) {
+                if (!positions.empty()) {
+                    selected = (selected + 1) % positions.size();
+                    selector.setPosition(positions.at(selected));
+                }
+            }
             if (event == EEvent::TAB) {
-                std::string nextGraphic = changeDisplay();
+                std::string nextGraphic = changeNewDisplay();
                 if (!nextGraphic.empty()) {
                     selectedGraphic = nextGraphic;
                     selecting = false;
@@ -263,10 +328,12 @@ namespace arcade {
         bool selecting = true;
         while (selecting) {
             EEvent event = _display->pollEvent();
-            if (event == QUIT || event == ESCAPE)
+            if (event == QUIT || event == SUPPR)
+                return false;
+            if (event == ESCAPE)
                 return false;
             if (event == TAB) {
-                std::string nextGraphic = changeDisplay();
+                std::string nextGraphic = changeNewDisplay();
                 if (!nextGraphic.empty()) {
                     input.reset();
                     confirm.reset();
@@ -373,12 +440,16 @@ namespace arcade {
 
             while (running) {
                 EEvent event = _display->pollEvent();
-                if (event == QUIT || event == ESCAPE) {
+                if (event == QUIT || event == SUPPR) {
+                    running = false;
+                    showingScores = false;
+                }
+                if (event == ESCAPE) {
                     running = false;
                     showingScores = false;
                 }
                 if (event == TAB) {
-                    nextGraphic = changeDisplay();
+                    nextGraphic = changeNewDisplay();
                     if (!nextGraphic.empty()) {
                         switchDisplay = true;
                         running = false;
@@ -455,19 +526,19 @@ namespace arcade {
         bool running = true;
         while (running) {
             EEvent event = _display->pollEvent();
-            if (event == EEvent::QUIT || event == EEvent::ESCAPE)
+            if (event == QUIT || event == SUPPR || event == ESCAPE)
                 running = false;
-            if (event == EEvent::UP) {
+            if (event == UP) {
                 selected = (selected - 1 + positions.size()) % positions.size();
                 selector->setPosition(positions.at(selected));
             }
-            if (event == EEvent::DOWN) {
+            if (event == DOWN) {
                 selected = (selected + 1) % positions.size();
                 selector->setPosition(positions.at(selected));
             }
-            if (event == EEvent::ENTER || event == EEvent::TAB) {
+            if (event == ENTER || event == TAB) {
                 std::string selectedGraphic;
-                if (event == EEvent::ENTER) {
+                if (event == ENTER) {
                     _display->playSound("./assets/8-bit-click.wav");
                     if (selected == 0)
                         selectedGraphic = runGames(*selector, running);
@@ -484,8 +555,8 @@ namespace arcade {
                     else
                         running = false;
                 }
-                if (event == EEvent::TAB)
-                    selectedGraphic = changeDisplay();
+                if (event == TAB)
+                    selectedGraphic = changeNewDisplay();
                 if (!running)
                     break;
                 if (!selectedGraphic.empty()) {
@@ -542,6 +613,12 @@ namespace arcade {
             selector->display();
             _display->render();
         }
+        playButton.reset();
+        changeLibButton.reset();
+        exit.reset();
+        scores.reset();
+        nameField.reset();
+        selector.reset();
         _display->stop();
         _display.reset();
         _loaderGraphic.close(_handleGraphic);

@@ -13,6 +13,8 @@
 #include "IGameModule.hpp"
 #include "DLLoader.hpp"
 
+#define CORE_EXIT "exit core"
+
 namespace arcade {
     class Core {
         public:
@@ -34,7 +36,8 @@ namespace arcade {
             std::string _currentGamePath;
             void loadGraphic(const std::string &path);
             std::string loadGame(const std::string &path);
-            std::string changeDisplay();
+            std::string changeNewDisplay();
+            std::string changeNewGame();
             std::vector<std::string> initLibList(std::string lib);
             std::string runGames(IRect &selector, bool &running);
             std::string runlib(IRect &selector, bool &running);

@@ -48,6 +48,18 @@ namespace arcade {
     static const Texture PANEL_TILE = {"", 35, 35, 35, 220};
     static const Texture TEXT_TILE = {"./assets/font/font.ttf", 255, 255, 255, 255};
 
+    bool Snake::exit() const
+    {
+        return _exitRequested;
+    }
+
+    bool Snake::changeGame()
+    {
+        bool change = _changeGame;
+        _changeGame = false;
+        return change;
+    }
+
     bool Snake::changeDisplay()
     {
         bool change = _changeDisplay;
@@ -213,6 +225,7 @@ namespace arcade {
         _paused = false;
         _gameOver = false;
         _changeDisplay = false;
+        _changeGame = false;
         _score = 0;
         spawnFood();
         updateScoreText();
@@ -234,12 +247,24 @@ namespace arcade {
     {
         Direction wanted = _nextDirection;
 
-        if (event == EEvent::QUIT || event == EEvent::ESCAPE) {
+        if (event == F5)
+            resetGame();
+        if (event == QUIT || event == SUPPR) {
+            _exitRequested = true;
+            _running = false;
+            return;
+        }
+        if (event == EEvent::ESCAPE) {
             _running = false;
             return;
         }
         if (event == EEvent::TAB) {
             _changeDisplay = true;
+            _running = false;
+            return;
+        }
+        if (event == EEvent::F1) {
+            _changeGame = true;
             _running = false;
             return;
         }
@@ -338,6 +363,8 @@ namespace arcade {
             return;
         _display = display;
         _changeDisplay = false;
+        _changeGame = false;
+        _exitRequested = false;
         std::srand(std::time(nullptr));
         _running = true;
         initBoard();

@@ -22,7 +22,6 @@ __attribute__((destructor)) void destroy(void)
 extern "C" {
     arcade::Ncurses *myEntryPoint(void)
     {
-        //std::cout << "Loading libNcurses.." << std::endl;
         return new arcade::Ncurses();
     }
 
@@ -239,6 +238,12 @@ namespace arcade {
             case '\b':
                 return BACKSPACE;
                 break;
+            case KEY_DC:
+                return SUPPR;
+            case KEY_F(5):
+                return F5;
+            case KEY_F(1):
+                return F1;
             case 'a': case 'A': return A;
             case 'b': case 'B': return B;
             case 'c': case 'C': return C;

@@ -85,42 +85,51 @@ namespace arcade {
         gpointer user_data)
     {
         (void)widget;
-        auto *gtk = static_cast<arcade::GTK *>(user_data);
+        auto *gtk = static_cast<GTK *>(user_data);
         if (!gtk)
             return FALSE;
         bool handled = true;
         switch (event->keyval) {
             case GDK_KEY_Escape:
-                gtk->queueEvent(arcade::EEvent::ESCAPE);
+                gtk->queueEvent(ESCAPE);
                 break;
             case GDK_KEY_Up:
-                gtk->queueEvent(arcade::EEvent::UP);
+                gtk->queueEvent(UP);
                 break;
             case GDK_KEY_Down:
-                gtk->queueEvent(arcade::EEvent::DOWN);
+                gtk->queueEvent(DOWN);
                 break;
             case GDK_KEY_Left:
-                gtk->queueEvent(arcade::EEvent::LEFT);
+                gtk->queueEvent(LEFT);
                 break;
             case GDK_KEY_Right:
-                gtk->queueEvent(arcade::EEvent::RIGHT);
+                gtk->queueEvent(RIGHT);
                 break;
             case GDK_KEY_Return:
-                gtk->queueEvent(arcade::EEvent::ENTER);
+                gtk->queueEvent(ENTER);
                 break;
             case GDK_KEY_Tab:
-                gtk->queueEvent(arcade::EEvent::TAB);
+                gtk->queueEvent(TAB);
                 break;
             case GDK_KEY_BackSpace:
-                gtk->queueEvent(arcade::EEvent::BACKSPACE);
+                gtk->queueEvent(BACKSPACE);
+                break;
+            case GDK_KEY_Delete:
+                gtk->queueEvent(SUPPR);
+                break;
+            case GDK_KEY_F1:
+                gtk->queueEvent(F1);
+                break;
+            case GDK_KEY_F5:
+                gtk->queueEvent(F5);
                 break;
             default:
                 if (event->keyval >= GDK_KEY_a && event->keyval <= GDK_KEY_z) {
-                    gtk->queueEvent(static_cast<arcade::EEvent>(
-                        arcade::EEvent::A + (event->keyval - GDK_KEY_a)));
+                    gtk->queueEvent(static_cast<EEvent>(
+                        A + (event->keyval - GDK_KEY_a)));
                 } else if (event->keyval >= GDK_KEY_A && event->keyval <= GDK_KEY_Z) {
-                    gtk->queueEvent(static_cast<arcade::EEvent>(
-                        arcade::EEvent::A + (event->keyval - GDK_KEY_A)));
+                    gtk->queueEvent(static_cast<EEvent>(
+                        A + (event->keyval - GDK_KEY_A)));
                 } else {
                     handled = false;
                 }
